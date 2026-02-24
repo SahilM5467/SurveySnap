@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SurveySnap</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <link rel="icon" type="image/png" href="{% static 'images/SurveySnap-Logo.png' %}">
+</head>
+
+<body>
+
+    {% include "home_navbar.html" %}
+
+    <div class="main-wrapper">
+        <div class="content">
+            {% block content %}{% endblock content %}
+        </div>
+    </div>
+
+    {% include "footer.html" %}
+
+</body>
+</html>

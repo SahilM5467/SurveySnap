@@ -33,6 +33,7 @@ class User(AbstractBaseUser):
         
     email = models.EmailField(unique=True)
     role_choice =(
+        ('admin','Admin'),
         ('creator','Survey Creator'),
         ('respondent','Respondent'),
     )

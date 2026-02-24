@@ -1,0 +1,527 @@
+/* ==========================================
+   SurveySnap - Complete Professional UI
+========================================== */
+
+/* ---------- ROOT VARIABLES ---------- */
+:root {
+    --primary: #2563EB;
+    --primary-dark: #1E40AF;
+    --primary-light: #DBEAFE;
+
+    --success: #22C55E;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+
+    --bg: #F8FAFC;
+    --card-bg: #FFFFFF;
+
+    --text-dark: #1F2937;
+    --text-light: #6B7280;
+
+    --border: #E5E7EB;
+
+    --radius: 12px;
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.08);
+
+    --transition: all 0.3s ease;
+}
+
+/* ---------- GLOBAL RESET ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1, h2, h3, h4 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ==========================================
+   NAVBAR (HEADER)
+========================================== */
+
+.navbar {
+    width: 100%;
+    background: var(--card-bg);
+    box-shadow: var(--shadow-soft);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 100%;
+    padding: 20px 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo a {
+    font-size: 20px;
+    font-weight: 600;
+    font-size: 25px;
+    color: var(--primary);
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Logo Image */
+.logo img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+/* Logo Text */
+.logo span {
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2563EB;
+    letter-spacing: 0.5px;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-links a {
+    font-weight: 500;
+    color: var(--text-dark);
+    position: relative;
+    transition: var(--transition);
+}
+
+.nav-links a:hover {
+    color: var(--primary);
+}
+
+.nav-links a::after {
+    content: "";
+    position: absolute;
+    width: 0%;
+    height: 2px;
+    background: var(--primary);
+    left: 0;
+    bottom: -4px;
+    transition: 0.3s ease;
+}
+
+.nav-links a:hover::after {
+    width: 100%;
+}
+
+/* ==========================================
+   SIDEBAR
+========================================== */
+
+.sidebar {
+    width: 250px;
+    height: calc(100vh - 60px);
+    background: var(--card-bg);
+    box-shadow: var(--shadow-soft);
+    position: fixed;
+    top: 60px;
+    left: 0;
+    padding: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    margin-bottom: 12px;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 10px 15px;
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.sidebar ul li a:hover,
+.sidebar ul li a.active {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ==========================================
+   MAIN CONTENT
+========================================== */
+
+.main-content {
+    margin-left: 250px;
+    padding: 30px;
+    margin-top: 20px;
+    flex: 1;
+}
+
+.main-wrapper {
+    max-width: 1200px;
+    margin: auto;
+    padding: 40px 25px;
+}
+
+.content {
+    min-height: 70vh;
+}
+
+/* ==========================================
+   CARDS
+========================================== */
+
+.card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    margin-bottom: 20px;
+    transition: var(--transition);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+}
+
+.card-title {
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.btn {
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: #fff;
+    font-weight: bold;
+    font-size: medium;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-outline {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    opacity: 0.85;
+}
+
+/* ==========================================
+   FORMS
+========================================== */
+
+form p {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    transition: var(--transition);
+    font-family: 'Inter', sans-serif;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.errorlist {
+    list-style: none;
+    padding-left: 0;
+    color: var(--danger);
+    font-size: 14px;
+}
+
+/* ==========================================
+   TABLES
+========================================== */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.table th, .table td {
+    padding: 12px 15px;
+    text-align: left;
+}
+
+.table thead {
+    background: var(--primary);
+    color: #fff;
+}
+
+.table tbody tr:nth-child(even) {
+    background: #F9FAFB;
+}
+
+.table tbody tr:hover {
+    background: var(--primary-light);
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
+.footer {
+    background: var(--card-bg);
+    margin-top: auto;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 30px 25px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.footer-container h3 {
+    font-family: 'Poppins', sans-serif;
+    color: var(--primary);
+}
+
+.footer-container p {
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding: 15px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+/* ==========================================
+   ANIMATIONS
+========================================== */
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+========================================== */
+
+@media (max-width: 992px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .main-content {
+        margin-left: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        top: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .nav-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .footer-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+
+/* ==========================================
+   SIGNUP FORM DESIGN
+========================================== */
+
+/* Center signup section */
+.signup-card {
+    max-width: 450px;
+    padding: 35px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    animation: fadeIn 0.4s ease-in;
+}
+
+/* Heading */
+.signup-card h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--primary);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+/* Form spacing */
+.signup-card form p {
+    margin-bottom: 18px;
+}
+
+/* Labels */
+.signup-card label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+/* Inputs */
+.signup-card input,
+.signup-card select,
+.signup-card textarea {
+    width: 100%;
+    padding: 11px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    font-size: 14px;
+}
+
+/* Focus effect */
+.signup-card input:focus,
+.signup-card select:focus,
+.signup-card textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Django error list */
+.signup-card .errorlist {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 6px;
+    color: var(--danger);
+    font-size: 13px;
+}
+
+/* Submit button */
+.signup-card .btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    font-weight: bold;
+    font-size: medium;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.signup-card .btn:hover {
+    background: var(--primary-dark);
+}
+
+/* Optional: help text styling */
+.signup-card .helptext {
+    font-size: 15px;
+    color: var(--text-light);
+    margin-top: 4px;
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .signup-card {
+        margin: 40px 15px;
+        padding: 25px;
+    }
+}
