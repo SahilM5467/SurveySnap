@@ -1,23 +1,40 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SurveySnap</title>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SurveySnap</title>
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+        <!-- Google Fonts -->
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- External CSS -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <!-- External CSS -->
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
-    <link rel="icon" type="image/png" href="{% static 'images/SurveySnap-Logo.png' %}">
-</head>
+        <link rel="icon" type="image/png" href="{% static 'images/SurveySnap-Logo.png' %}">
+    </head>
 
 <body>
 
-    {% include "home_navbar.html" %}
+    {% if show_home_navbar %}
+        {% include "home_navbar.html" %}
+
+    {% elif request.user.is_authenticated %}
+
+        {% if request.user.role == "admin" %}
+            {% include "survey/admin/admin_navbar.html" %}
+
+        {% elif request.user.role == "creator" %}
+            {% include "survey/creator/creator_navbar.html" %}
+
+        {% elif request.user.role == "respondent" %}
+            {% include "survey/respondent/respondent_navbar.html" %}
+        {% endif %}
+
+    {% else %}
+        {% include "home_navbar.html" %}
+    {% endif %}
 
     <div class="main-wrapper">
         <div class="content">
@@ -27,5 +44,38 @@
 
     {% include "footer.html" %}
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const logoutButtons = document.querySelectorAll(".logout-btn");
+
+            logoutButtons.forEach(function(button) {
+
+                button.addEventListener("click", function(event) {
+                    event.preventDefault();
+
+                    const logoutUrl = this.href;
+
+                    Swal.fire({
+                        title: "Logout?",
+                        text: "Are you sure you want to logout?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#2563EB",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, Logout"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = logoutUrl;
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+
 </body>
+
 </html>

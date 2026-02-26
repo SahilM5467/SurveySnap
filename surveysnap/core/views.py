@@ -1,9 +1,11 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from .forms import UserSignupForm, UserLoginForm
-from django.contrib.auth import authenticate,login
+from django.contrib.auth import authenticate, login, logout
 
 def homeView(request):
-  return render(request,'core/home.html')
+    return render(request, "core/home.html", {
+        "show_home_navbar": True
+    })
 
 # Create your views here.
 def userSignupView(request):
@@ -36,7 +38,11 @@ def userLoginView(request):
           return redirect("respondent_dashboard") 
       else:
         return render(request,'core/login.html',{'form':form})  
-    
   else:
     form = UserLoginForm()
     return render(request,'core/login.html',{'form':form})
+  
+
+def userLogoutView(request):
+    logout(request)
+    return redirect("home")   

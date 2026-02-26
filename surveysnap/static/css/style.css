@@ -9,7 +9,7 @@
     --primary-light: #DBEAFE;
 
     --success: #22C55E;
-    --danger: #EF4444;
+    --danger: red;
     --warning: #F59E0B;
 
     --bg: #F8FAFC;
@@ -259,7 +259,7 @@ a {
 }
 
 .btn-danger:hover {
-    opacity: 0.85;
+    background: rgb(210, 0, 0);
 }
 
 /* ==========================================
