@@ -1,12 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import UserSignupForm, UserLoginForm
 from django.contrib.auth import authenticate, login, logout
-from django.core.mail import EmailMultiAlternatives
-from django.conf import settings
-from django.template.loader import render_to_string
-from email.mime.image import MIMEImage
-import os
-
+from django.contrib import messages
 
 def homeView(request):
     return render(request, "core/home.html", {
@@ -18,67 +13,17 @@ def homeView(request):
 # USER SIGNUP VIEW
 # =========================
 def userSignupView(request):
+
     if request.method == "POST":
-        form = UserSignupForm(request.POST or None)
+        form = UserSignupForm(request.POST)
 
         if form.is_valid():
-            user = form.save()
-            email = form.cleaned_data['email']
-            user_name = user.email   # or user.username if available
+            form.save()
 
-            # Render HTML Email Template
-            html_content = render_to_string(
-                "emails/welcome_email.html",
-                {"user_name": user_name}
+            messages.success(
+                request,
+                "Account created successfully! Please login."
             )
-
-            email_message = EmailMultiAlternatives(
-                subject="🎉 Welcome to SurveySnap",
-                body="Thank you for registering with SurveySnap.",
-                from_email=settings.EMAIL_HOST_USER,
-                to=[email],
-            )
-
-            # Attach HTML version
-            email_message.attach_alternative(html_content, "text/html")
-
-            # =========================
-            # Attach Logo (Inline Image)
-            # =========================
-            logo_path = os.path.join(
-                settings.BASE_DIR,
-                "static/images/SurveySnap-Logo.png"
-            )
-
-            if os.path.exists(logo_path):
-                with open(logo_path, "rb") as img:
-                    mime_image = MIMEImage(img.read())
-                    mime_image.add_header("Content-ID", "<logo_image>")
-                    mime_image.add_header(
-                        "Content-Disposition",
-                        "inline",
-                        filename="SurveySnap-Logo.png"
-                    )
-                    email_message.attach(mime_image)
-
-            # =========================
-            # Attach PDF File
-            # =========================
-            pdf_path = os.path.join(
-                settings.BASE_DIR,
-                "static/docs/SurveySnap_Welcome_Guide.pdf"
-            )
-
-            if os.path.exists(pdf_path):
-                with open(pdf_path, "rb") as pdf:
-                    email_message.attach(
-                        "SurveySnap_Welcome_Guide.pdf",
-                        pdf.read(),
-                        "application/pdf"
-                    )
-
-            # Send Email
-            email_message.send(fail_silently=False)
 
             return redirect("login")
 

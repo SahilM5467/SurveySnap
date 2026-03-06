@@ -6,6 +6,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>SurveySnap</title>
 
+        <!-- Tailwind -->
+        <script src="https://cdn.tailwindcss.com"></script>
+
         <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 
@@ -13,6 +16,26 @@
         <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
         <link rel="icon" type="image/png" href="{% static 'images/SurveySnap-Logo.png' %}">
+
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+        <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+        </script>
     </head>
 
 <body>
