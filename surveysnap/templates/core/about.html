@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="about-hero">
+
+    <div class="about-hero-container">
+
+        <div class="about-hero-text">
+            <h1>About SurveySnap</h1>
+
+            <p>
+                SurveySnap is a powerful survey platform designed to help
+                businesses, researchers, and teams create smart surveys,
+                collect responses, and analyze insights effortlessly.
+            </p>
+
+            <a href="/features/" class="btn-primary">
+                Explore Features
+            </a>
+        </div>
+
+        <div class="about-hero-image">
+            <img src="{% static 'images/about-illustration.svg' %}" alt="About SurveySnap">
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- MISSION SECTION -->
+<section class="mission">
+
+    <div class="mission-container">
+
+        <div class="mission-box">
+
+            <div class="mission-icon">
+                <i data-lucide="target"></i>
+            </div>
+
+            <h2>Our Mission</h2>
+
+            <p>
+                Our mission is to simplify the way people collect and
+                understand feedback. SurveySnap empowers individuals and
+                organizations to make smarter decisions using powerful
+                survey tools and real-time analytics.
+            </p>
+
+        </div>
+
+        <div class="mission-box">
+
+            <div class="mission-icon">
+                <i data-lucide="eye"></i>
+            </div>
+
+            <h2>Our Vision</h2>
+
+            <p>
+                We aim to become a leading global survey platform that
+                helps millions of users gather insights, understand
+                audiences, and drive meaningful improvements through data.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- WHAT WE DO -->
+<section class="what-we-do">
+
+    <h2 class="section-title">What SurveySnap Helps You Do</h2>
+
+    <div class="features-grid">
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                <i data-lucide="clipboard-list"></i>
+            </div>
+
+            <h3>Create Surveys</h3>
+
+            <p>
+                Design professional surveys using intuitive and simple tools.
+            </p>
+
+        </div>
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                <i data-lucide="send"></i>
+            </div>
+
+            <h3>Collect Responses</h3>
+
+            <p>
+                Share surveys instantly and gather responses from anywhere.
+            </p>
+
+        </div>
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                <i data-lucide="bar-chart-3"></i>
+            </div>
+
+            <h3>Analyze Insights</h3>
+
+            <p>
+                Turn responses into meaningful insights with real-time analytics.
+            </p>
+
+        </div>
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                <i data-lucide="lightbulb"></i>
+            </div>
+
+            <h3>Improve Decisions</h3>
+
+            <p>
+                Use survey data to improve products, services, and experiences.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- STATS SECTION -->
+<section class="stats">
+
+    <div class="stats-container">
+
+        <div class="stat-card">
+
+            <h2><span class="counter" data-target="10">0</span>K+</h2>
+            <p>Surveys Created</p>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h2><span class="counter" data-target="50">0</span>K+</h2>
+            <p>Responses Collected</p>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h2><span class="counter" data-target="5">0</span>K+</h2>
+            <p>Active Users</p>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h2><span class="counter" data-target="99">0</span>%</h2>
+            <p>Customer Satisfaction</p>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- COUNTER SCRIPT -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const counters = document.querySelectorAll('.counter');
+
+    counters.forEach(counter => {
+
+        const updateCounter = () => {
+
+            const target = +counter.getAttribute('data-target');
+            const current = +counter.innerText;
+
+            const increment = target / 120;
+
+            if(current < target){
+                counter.innerText = Math.ceil(current + increment);
+                setTimeout(updateCounter, 20);
+            }
+            else{
+                counter.innerText = target;
+            }
+
+        };
+
+        updateCounter();
+
+    });
+
+});
+
+</script>
+
+<!-- CTA SECTION -->
+<section class="about-cta">
+
+    <h2>Start Creating Surveys Today</h2>
+
+    <p>
+        Join thousands of users who trust SurveySnap
+        for collecting feedback and insights.
+    </p>
+
+    <a href="/signup/" class="btn-primary">
+        Get Started Free
+    </a>
+
+</section>
+
+
+
+{% endblock %}

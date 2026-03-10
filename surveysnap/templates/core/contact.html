@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- CONTACT HERO -->
+<section class="contact-hero">
+    <div class="contact-hero-container">
+
+        <h1>Contact SurveySnap</h1>
+        <p> Have questions, feedback, or need support? </p>
+        <p> Our team is here to help you build better surveys. </p>
+    </div>
+</section>
+
+
+<!-- CONTACT SECTION -->
+<section class="contact-section">
+
+    <div class="contact-container">
+
+        <!-- CONTACT INFO -->
+        <div class="contact-info">
+
+            <div class="info-card">
+                <i class="bi bi-envelope-fill"></i>
+                <h3>Email Us</h3>
+                <p>surveysnap.survey@gmail.com</p>
+            </div>
+
+            <div class="info-card">
+                <i class="bi bi-telephone-fill"></i>
+                <h3>Call Us</h3>
+                <p>+91 1234567890</p>
+            </div>
+
+            <div class="info-card">
+                <i class="bi bi-geo-alt-fill"></i>
+                <h3>Office</h3>
+                <p>Ahmedabad, Gujarat, India</p>
+            </div>
+
+            <div class="info-card">
+                <i class="bi bi-clock-fill"></i>
+                <h3>Working Hours</h3>
+                <p>Mon – Fri : 9 AM – 6 PM</p>
+            </div>
+
+        </div>
+
+
+        <!-- CONTACT FORM -->
+        <div class="contact-form">
+
+            <h2>Send us a Message</h2>
+
+            <form>
+
+                <div class="form-group">
+                    <input type="text" placeholder="Your Name" required>
+                </div>
+
+                <div class="form-group">
+                    <input type="email" placeholder="Your Email" required>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" placeholder="Subject" required>
+                </div>
+
+                <div class="form-group">
+                    <textarea rows="5" placeholder="Your Message"></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    Send Message
+                    <i class="bi bi-send-fill"></i>
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- MAP SECTION -->
+<section class="map-section">
+
+    <h2 class="map-title">Our Location</h2>
+
+    <div class="map-container">
+
+        <iframe 
+            src="https://maps.google.com/maps?q=Ahmedabad&t=&z=13&ie=UTF8&iwloc=&output=embed"
+            frameborder="0"
+            allowfullscreen="">
+        </iframe>
+
+    </div>
+
+</section>
+
+{% endblock %}

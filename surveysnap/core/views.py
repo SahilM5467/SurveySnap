@@ -8,6 +8,15 @@ def homeView(request):
         "show_home_navbar": True
     })
 
+def featuresView(request):
+    return render(request, "core/features.html")
+
+def aboutView(request):
+    return render(request, "core/about.html")
+
+def contactView(request):
+    return render(request, "core/contact.html")
+
 
 # =========================
 # USER SIGNUP VIEW

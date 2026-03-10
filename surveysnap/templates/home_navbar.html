@@ -3,15 +3,27 @@
 <nav class="navbar">
     <div class="nav-container">
 
+        <!-- Logo -->
         <div class="logo">
             <img src="{% static 'images/SurveySnap-Logo.png' %}" alt="SurveySnap Logo">
             <a href="{% url 'home' %}">SurveySnap</a>
         </div>
 
-        <div class="nav-links">
+        <!-- Center Navigation -->
+        <div class="nav-center">
             <a href="{% url 'home' %}">Home</a>
-            <a href="{% url 'login' %}">Login</a>
-            <button class="btn btn-primary" onclick="window.location.href = '{% url 'signup' %}'">Sign Up</button>
+            <a href="{% url 'features' %}">Features</a>
+            <a href="{% url 'about' %}">About</a>
+            <a href="{% url 'contact' %}">Contact</a>
+        </div>
+
+        <!-- Right Navigation -->
+        <div class="nav-right">
+            <a class="login-link" href="{% url 'login' %}">Login</a>
+            <button class="btn btn-primary"
+                onclick="window.location.href='{% url 'signup' %}'">
+                Sign Up
+            </button>
         </div>
 
     </div>
