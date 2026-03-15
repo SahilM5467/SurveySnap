@@ -52,6 +52,7 @@ class User(AbstractBaseUser):
 
     phone_no = models.CharField(
         max_length=15,
+        unique=True,
         blank=True,
         null=True
     )
