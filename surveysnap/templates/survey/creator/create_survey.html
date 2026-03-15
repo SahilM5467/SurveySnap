@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Create New Survey - SurveySnap</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2f75e4",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111721",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3e%3cpath stroke=%27%236b7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<header class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-6 py-4 lg:px-20">
+<div class="flex items-center gap-4">
+<div class="size-8 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight tracking-tight">SurveySnap</h2>
+</div>
+<div class="hidden md:flex flex-1 justify-center gap-8">
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">My Surveys</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Templates</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Analytics</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/20">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="User profile avatar with friendly face" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOpU7rCuZbRWjV-wPicOXOaUaZMUqnLeDmkxJ8d29V22xiyQ5ST7uQHie97veC4_12taGYEEWje9dU26WcrgI_e54GzhSRWe9s7trpj7V03tXdm6gpQX7qctUGa8OAztqo-SRHz_gNNwZpHzB-Q4BY_6tdYGnOJV0EUif0VB8lpI7Mo_BqRow3pLY6GbEDsPo9R4XqDsUbnX6gxif-h_V3p2zZKNvG8TQDTMO3lDddn4sYp7OtOBA4w9pG_DubAqKLcmSA3-qGLS-M"/>
+</div>
+</div>
+</header>
+<main class="flex-1 flex flex-col items-center py-12 px-4 sm:px-6">
+<div class="w-full max-w-4xl space-y-8">
+<div class="text-center space-y-2">
+<h1 class="text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Create New Survey</h1>
+<p class="text-slate-500 dark:text-slate-400 text-lg">Choose how you want to start collecting insights today.</p>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-8 space-y-8">
+<div class="grid md:grid-cols-2 gap-8">
+<div class="space-y-4">
+<label class="block">
+<span class="text-slate-700 dark:text-slate-300 text-sm font-semibold uppercase tracking-wider">Survey Title</span>
+<input class="mt-2 block w-full rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:border-primary focus:ring-primary transition-all p-3" placeholder="e.g. Q4 Product Feedback" type="text"/>
+</label>
+</div>
+<div class="space-y-4">
+<label class="block">
+<span class="text-slate-700 dark:text-slate-300 text-sm font-semibold uppercase tracking-wider">Category</span>
+<select class="mt-2 block w-full rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:border-primary focus:ring-primary transition-all p-3">
+<option>Market Research</option>
+<option>Customer Satisfaction</option>
+<option>Employee Engagement</option>
+<option>Event Planning</option>
+<option>Product Development</option>
+</select>
+</label>
+</div>
+</div>
+<hr class="border-slate-100 dark:border-slate-800"/>
+<div class="space-y-6">
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Select a Starting Point</h3>
+<div class="grid sm:grid-cols-3 gap-6">
+<button class="group relative flex flex-col items-center justify-center p-8 rounded-xl border-2 border-dashed border-primary bg-primary/5 hover:bg-primary/10 transition-all text-center">
+<div class="size-14 rounded-full bg-primary flex items-center justify-center text-white mb-4 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-3xl">add</span>
+</div>
+<span class="font-bold text-slate-900 dark:text-slate-100">Start from Scratch</span>
+<span class="text-sm text-slate-500 mt-1">Clean slate for your ideas</span>
+</button>
+<button class="group flex flex-col items-start p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-primary transition-all text-left">
+<div class="w-full aspect-video rounded-lg mb-4 overflow-hidden bg-slate-100 dark:bg-slate-800">
+<div class="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-600 opacity-80" data-alt="Abstract blue gradient pattern for customer satisfaction template"></div>
+</div>
+<span class="font-bold text-slate-900 dark:text-slate-100">Customer NPS</span>
+<span class="text-xs text-slate-500 mt-1">10 pre-built questions</span>
+</button>
+<button class="group flex flex-col items-start p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-primary transition-all text-left">
+<div class="w-full aspect-video rounded-lg mb-4 overflow-hidden bg-slate-100 dark:bg-slate-800">
+<div class="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 opacity-80" data-alt="Abstract green gradient pattern for market research template"></div>
+</div>
+<span class="font-bold text-slate-900 dark:text-slate-100">Market Research</span>
+<span class="text-xs text-slate-500 mt-1">15 strategic questions</span>
+</button>
+</div>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-950 px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800">
+<button class="text-slate-600 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+                                Cancel
+                            </button>
+<div class="flex gap-3 w-full sm:w-auto">
+<button class="flex-1 sm:flex-initial px-8 py-3 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-900 transition-all">
+                                    Browse All Templates
+                                </button>
+<button class="flex-1 sm:flex-initial px-10 py-3 rounded-lg bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/25">
+                                    Create Survey
+                                </button>
+</div>
+</div>
+</div>
+<div class="grid sm:grid-cols-3 gap-6 mt-12">
+<div class="flex items-start gap-4 p-4">
+<div class="text-primary mt-1">
+<span class="material-symbols-outlined">security</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-slate-100">GDPR Compliant</h4>
+<p class="text-sm text-slate-500">Your data is always encrypted and protected.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-4">
+<div class="text-primary mt-1">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-slate-100">Quick Setup</h4>
+<p class="text-sm text-slate-500">Get your survey live in under 5 minutes.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-4">
+<div class="text-primary mt-1">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-slate-100">Smart Insights</h4>
+<p class="text-sm text-slate-500">Auto-generated reports from your data.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="mt-auto py-8 border-t border-slate-200 dark:border-slate-800 text-center text-slate-500 text-sm">
+<p>© 2024 SurveySnap Inc. All rights reserved.</p>
+</footer>
+</div>
+</div>
+</body></html>
+
+{% endblock content %}

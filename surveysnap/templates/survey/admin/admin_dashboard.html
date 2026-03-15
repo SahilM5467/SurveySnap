@@ -1,7 +1,383 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1> Admin Dashboard </h1>
-{{ request.user.role }}
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SurveySnap - Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2563EB",
+                        "success": "#22C55E",
+                        "background-light": "#f2f3f6",
+                        "background-dark": "#111721",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "12px",
+                        "lg": "16px",
+                        "xl": "24px",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+<div class="flex min-h-screen">
+<!-- Sidebar -->
+<aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col fixed h-full z-50">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary size-10 rounded-lg flex items-center justify-center text-white shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">SurveySnap</h1>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary rounded-lg font-semibold group" href="#">
+<span class="material-symbols-outlined text-[22px]">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">description</span>
+<span>Surveys</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">bar_chart</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">group</span>
+<span>Users</span>
+</a>
+<div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">settings</span>
+<span>Settings</span>
+</a>
+</div>
+</nav>
+<div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg m-4">
+<p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Pro Plan</p>
+<p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Get advanced analytics and team features.</p>
+<button class="w-full bg-primary text-white text-sm font-semibold py-2 rounded-lg hover:bg-primary/90 transition-colors">Upgrade Now</button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 ml-64 min-h-screen">
+<!-- Header -->
+<header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-40">
+<div class="flex items-center flex-1">
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search surveys, analytics, or users..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Sahil Meghani</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Admin</p>
+</div>
+<div class="size-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+<img alt="User profile" class="size-full object-cover" data-alt="Modern professional male avatar with glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2zy7CZfcd_ZbJOe_D3YYO96cUkWIiZXiwysnvgEqw2dkYBKMM0LalbY1lBvOje7pnnfXr23TRwr6Dq-CviCMI4k5hFfjQIofT-N3NW6CKu1oTXsO_i9N9cLIpxf3Y1-UBLz8uH4C6nCaaLjpSILNWZLcXD9FDkufmHvT-azZcfD61uZeg45Fhmskmbi78ne8yIodZoLA0_xdmiBOPa-R6yGz67oVtIvjY-hQfvUVSLwmvrQg7uUbDoZlpLS0lxwX653rsT8dajCdX"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="p-8 space-y-8">
+<!-- Welcome Section -->
+<div class="flex items-end justify-between">
+<div>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white">Good morning, Alex</h2>
+<p class="text-slate-500 dark:text-slate-400">Here's what's happening with your surveys today.</p>
+</div>
+<button class="bg-primary text-white px-5 py-2.5 rounded-lg font-semibold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Create New Survey
+                    </button>
+</div>
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">description</span>
+</div>
+<span class="text-success text-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                                12.5%
+                            </span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Surveys</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">1,284</h3>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">group</span>
+</div>
+<span class="text-success text-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                                5.2%
+                            </span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Active Users</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">8,562</h3>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">verified</span>
+</div>
+<span class="text-red-500 text-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_down</span>
+                                2.1%
+                            </span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Completion Rate</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">72.4%</h3>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">timer</span>
+</div>
+<span class="text-success text-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                                8.4%
+                            </span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Avg. Response Time</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">2m 45s</h3>
+</div>
+</div>
+<!-- Main Grid Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Chart Section -->
+<div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Response Trends</h3>
+<p class="text-sm text-slate-500">Daily survey completions over the last 30 days</p>
+</div>
+<select class="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm font-medium py-2 pl-3 pr-8 focus:ring-primary/20 cursor-pointer">
+<option>Last 7 days</option>
+<option>Last 30 days</option>
+<option>Last 12 months</option>
+</select>
+</div>
+<div class="h-[300px] w-full relative flex items-end justify-between px-2">
+<div class="absolute inset-0 flex flex-col justify-between py-2 pointer-events-none">
+<div class="border-t border-slate-100 dark:border-slate-800 w-full h-0"></div>
+<div class="border-t border-slate-100 dark:border-slate-800 w-full h-0"></div>
+<div class="border-t border-slate-100 dark:border-slate-800 w-full h-0"></div>
+<div class="border-t border-slate-100 dark:border-slate-800 w-full h-0"></div>
+<div class="border-t border-slate-100 dark:border-slate-800 w-full h-0"></div>
+</div>
+<!-- Mock Bars -->
+<div class="w-8 bg-primary/20 hover:bg-primary transition-colors rounded-t-sm h-[40%]" title="Mon"></div>
+<div class="w-8 bg-primary/20 hover:bg-primary transition-colors rounded-t-sm h-[65%]" title="Tue"></div>
+<div class="w-8 bg-primary/20 hover:bg-primary transition-colors rounded-t-sm h-[55%]" title="Wed"></div>
+<div class="w-8 bg-primary/20 hover:bg-primary transition-colors rounded-t-sm h-[85%]" title="Thu"></div>
+<div class="w-8 bg-primary hover:bg-primary transition-colors rounded-t-sm h-[95%]" title="Fri"></div>
+<div class="w-8 bg-primary/20 hover:bg-primary transition-colors rounded-t-sm h-[30%]" title="Sat"></div>
+<div class="w-8 bg-primary/20 hover:bg-primary transition-colors rounded-t-sm h-[20%]" title="Sun"></div>
+<div class="w-8 bg-primary/20 hover:bg-primary transition-colors rounded-t-sm h-[60%]" title="Mon"></div>
+<div class="w-8 bg-primary/20 hover:bg-primary transition-colors rounded-t-sm h-[75%]" title="Tue"></div>
+<div class="w-8 bg-primary/20 hover:bg-primary transition-colors rounded-t-sm h-[50%]" title="Wed"></div>
+</div>
+<div class="flex justify-between mt-4 px-2">
+<span class="text-xs font-medium text-slate-400">12 May</span>
+<span class="text-xs font-medium text-slate-400">16 May</span>
+<span class="text-xs font-medium text-slate-400">20 May</span>
+<span class="text-xs font-medium text-slate-400">24 May</span>
+<span class="text-xs font-medium text-slate-400">28 May</span>
+</div>
+</div>
+<!-- Side Stats -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">User Demographics</h3>
+<div class="space-y-6">
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-medium">
+<span class="text-slate-600 dark:text-slate-400">Mobile Users</span>
+<span class="text-slate-900 dark:text-white">64%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[64%]"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-medium">
+<span class="text-slate-600 dark:text-slate-400">Desktop Users</span>
+<span class="text-slate-900 dark:text-white">32%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="bg-primary/60 h-full w-[32%]"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-medium">
+<span class="text-slate-600 dark:text-slate-400">Tablet Users</span>
+<span class="text-slate-900 dark:text-white">4%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="bg-primary/30 h-full w-[4%]"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+<button class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
+                                View Full Report
+                                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Table Section -->
+<div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Recent Surveys</h3>
+<button class="text-sm font-semibold text-primary">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50/50 dark:bg-slate-800/50">
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Survey Name</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Responses</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Completion Rate</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Last Modified</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Customer Feedback Q2</span>
+<span class="text-xs text-slate-500">Created by Sarah J.</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success">
+<span class="size-1.5 rounded-full bg-success mr-1.5"></span>
+                                            Active
+                                        </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">452 responses</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="bg-success h-full w-[88%]"></div>
+</div>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-400">88%</span>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">2 hours ago</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Product Launch Review</span>
+<span class="text-xs text-slate-500">Created by Mike T.</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+<span class="size-1.5 rounded-full bg-slate-400 mr-1.5"></span>
+                                            Draft
+                                        </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">0 responses</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="bg-slate-300 h-full w-0"></div>
+</div>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-400">0%</span>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Yesterday</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Annual Employee Pulse</span>
+<span class="text-xs text-slate-500">Created by HR Dept.</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+<span class="size-1.5 rounded-full bg-primary mr-1.5"></span>
+                                            Completed
+                                        </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">1,204 responses</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[94%]"></div>
+</div>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-400">94%</span>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">3 days ago</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
 
 {% endblock content %}

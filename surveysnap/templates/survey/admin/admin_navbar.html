@@ -5,14 +5,15 @@
 
         <div class="logo">
             <img src="{% static 'images/SurveySnap-Logo.png' %}" alt="SurveySnap Logo">
-            <a href="{% url 'home' %}">SurveySnap</a>
+            <a href="{% url 'admin_dashboard' %}">SurveySnap</a>
         </div>
 
-        <div class="nav-links">
-            <a href="#">Dashboard</a>
-            <a href="#">Manage Users</a>
-            <a href="#">Manage Surveys</a>
-            <a href="#">Reports</a>
+        <div class="nav-center">
+            <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+            <a href="{% url 'manage_users' %}">Manage Users</a>
+            <a href="{% url 'manage_surveys' %}">Manage Surveys</a>
+            <a href="{% url 'manage_templates' %}">Manage Templates</a>
+            <a href="{% url 'reports' %}">Reports</a>
             <button class="btn btn-danger logout-btn" data-url="{% url 'logout' %}">
                 Logout
             </button>
