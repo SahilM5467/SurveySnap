@@ -1,8 +1,11 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
 from .decorators import role_required
 from core.models import User
-from survey.models import Survey, Response
+from survey.models import *
 
 # Create your views here.
 
@@ -12,7 +15,125 @@ from survey.models import Survey, Response
 # @login_required(login_url="login") 
 @role_required(allowed_roles=["admin"])
 def AdminDashboardView(request):
-    return render(request,"survey/admin/admin_dashboard.html")
+    # =====================
+    # USERS
+    # =====================
+    creators = User.objects.filter(role="creator").count()
+    respondents = User.objects.filter(role="respondent").count()
+    admins = User.objects.filter(role="admin").count()
+
+    # =====================
+    # SURVEYS
+    # =====================
+    surveys = Survey.objects.count()
+
+    draft_surveys = Survey.objects.filter(status="Draft").count()
+    active_surveys = Survey.objects.filter(status="Active").count()
+    closed_surveys = Survey.objects.filter(status="Closed").count()
+
+    # =====================
+    # SURVEY TEMPLATES
+    # =====================
+    templates = SurveyTemplate.objects.count()
+
+    system_templates = SurveyTemplate.objects.filter(
+        is_system_template=True
+    ).count()
+
+    creator_templates = SurveyTemplate.objects.filter(
+        is_system_template=False
+    ).count()
+
+    # Templates by Category
+    template_categories = (
+        SurveyTemplate.objects
+        .values("category")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+
+    categories = []
+    category_counts = []
+
+    for item in template_categories:
+        categories.append(item["category"])
+        category_counts.append(item["total"])
+
+    # =====================
+    # MONTHLY SURVEY GROWTH
+    # =====================
+    monthly_surveys = (
+        Survey.objects
+        .annotate(month=TruncMonth("created_at"))
+        .values("month")
+        .annotate(total=Count("id"))
+        .order_by("month")
+    )
+
+    months = []
+    survey_counts = []
+
+    for item in monthly_surveys:
+        months.append(item["month"].strftime("%b"))
+        survey_counts.append(item["total"])
+
+    # =====================
+    # TOP CREATORS
+    # =====================
+    top_creators = (
+        Survey.objects
+        .values("creator__first_name", "creator__last_name")
+        .annotate(total=Count("id"))
+        .order_by("-total")[:5]
+    )
+
+    # =====================
+    # TOP TEMPLATE CREATORS
+    # =====================
+    top_template_creators = (
+        SurveyTemplate.objects
+        
+        .values("creator__first_name", "creator__last_name")
+        .annotate(total=Count("id"))
+        .order_by("-total")[:5]
+    )
+
+    # =====================
+    # RECENT DATA
+    # =====================
+    recent_surveys = Survey.objects.select_related("creator").order_by("-created_at")[:5]
+
+    recent_templates = SurveyTemplate.objects.order_by("-created_at")[:5]
+
+    context = {
+
+        "creators": creators,
+        "respondents": respondents,
+        "admins": admins,
+
+        "surveys": surveys,
+        "draft_surveys": draft_surveys,
+        "active_surveys": active_surveys,
+        "closed_surveys": closed_surveys,
+
+        "templates": templates,
+        "system_templates": system_templates,
+        "creator_templates": creator_templates,
+
+        "categories": categories,
+        "category_counts": category_counts,
+
+        "months": months,
+        "survey_counts": survey_counts,
+
+        "top_creators": top_creators,
+        "top_template_creators": top_template_creators,
+
+        "recent_surveys": recent_surveys,
+        "recent_templates": recent_templates,
+    }
+
+    return render(request,"survey/admin/admin_dashboard.html",context)
     
 @role_required(allowed_roles=["admin"])
 def MangeUsersView(request):

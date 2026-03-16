@@ -1,0 +1,226 @@
+/* ===============================
+   DASHBOARD WRAPPER
+================================ */
+
+.dashboard{
+    max-width:1400px;
+    margin:auto;
+    padding:40px 20px;
+}
+
+
+/* ===============================
+   TITLE
+================================ */
+
+.dashboard-title{
+    font-size:30px;
+    font-weight:600;
+    margin-bottom:35px;
+    text-align: center;
+    color:var(--text-dark);
+}
+
+
+
+/* ===============================
+   KPI GRID
+================================ */
+
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:25px;
+    margin-bottom:40px;
+}
+
+
+/* KPI CARD */
+
+.kpi-card{
+    background:var(--card-bg);
+    padding:25px;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-soft);
+    transition:var(--transition);
+    position:relative;
+    overflow:hidden;
+}
+
+.kpi-card:hover{
+    transform:translateY(-6px);
+    box-shadow:var(--shadow-hover);
+}
+
+.kpi-card h3{
+    font-size:14px;
+    text-align: center;
+    color:var(--text-light);
+    font-weight:500;
+}
+
+.kpi-card h2{
+    font-size:32px;
+    text-align: center;
+    margin-top:8px;
+    font-weight:600;
+    color:var(--primary);
+}
+
+
+
+/* ===============================
+   CHART GRID
+================================ */
+
+.chart-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:30px;
+    margin-bottom:40px;
+}
+
+
+.chart-card{
+    background:var(--card-bg);
+    padding:25px;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-soft);
+    transition:var(--transition);
+}
+
+.chart-card:hover{
+    box-shadow:var(--shadow-hover);
+}
+
+.chart-card h3{
+    font-size:16px;
+    text-align: center;
+    margin-bottom:20px;
+    color:var(--text-dark);
+}
+
+
+
+/* FIX CHART SIZE */
+
+.chart-card canvas{
+    width:100% !important;
+    height:300px !important;
+}
+
+
+
+/* ===============================
+   TABLE SECTION
+================================ */
+
+.table-section{
+    background:var(--card-bg);
+    padding:25px;
+    border-radius:var(--radius);
+    margin-bottom:35px;
+    box-shadow:var(--shadow-soft);
+}
+
+.table-section h2{
+    margin-bottom:18px;
+    font-size:18px;
+    text-align: center;
+    color:var(--text-dark);
+}
+
+
+
+/* ===============================
+   TABLE STYLE
+================================ */
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+}
+
+thead{
+    background:var(--primary-light);
+}
+
+th{
+    padding:14px;
+    text-align: center;
+    color:var(--text-dark);
+    font-weight:600;
+}
+
+td{
+    padding:14px;
+    border-bottom:1px solid var(--border);
+    color:var(--text-light);
+}
+
+tbody tr{
+    transition:var(--transition);
+}
+
+tbody tr:hover{
+    background:var(--primary-light);
+}
+
+
+
+/* ===============================
+   RESPONSIVE DESIGN
+================================ */
+
+/* Laptop */
+
+@media(max-width:1200px){
+
+.kpi-grid{
+grid-template-columns:repeat(2,1fr);
+}
+
+.chart-grid{
+grid-template-columns:1fr;
+}
+
+}
+
+
+/* Tablet */
+
+@media(max-width:768px){
+
+.dashboard{
+padding:20px;
+}
+
+.dashboard-title{
+font-size:24px;
+}
+
+.kpi-grid{
+grid-template-columns:1fr;
+}
+
+.chart-grid{
+grid-template-columns:1fr;
+}
+
+}
+
+
+/* Mobile */
+
+@media(max-width:480px){
+
+table{
+font-size:12px;
+}
+
+th,td{
+padding:10px;
+}
+
+}
