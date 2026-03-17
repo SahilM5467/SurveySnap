@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/manage_users.css' %}">
+
+<div class="form-container">
+
+<h2>Edit User</h2>
+
+<form method="POST" id="userForm">
+{% csrf_token %}
+
+<!-- EMAIL -->
+<div class="input-group">
+    <i>📧</i>
+    <input type="email" name="email" value="{{ user.email }}" required placeholder=" ">
+    <label>Email</label>
+    <small class="error"></small>
+</div>
+
+<!-- FIRST NAME -->
+<div class="input-group">
+    <i>👤</i>
+    <input type="text" name="first_name" value="{{ user.first_name }}" required placeholder=" ">
+    <label>First Name</label>
+</div>
+
+<!-- LAST NAME -->
+<div class="input-group">
+    <i>👤</i>
+    <input type="text" name="last_name" value="{{ user.last_name }}" required placeholder=" ">
+    <label>Last Name</label>
+</div>
+
+<!-- PHONE -->
+<div class="input-group">
+    <i>📱</i>
+    <input type="text" name="phone_no" value="{{ user.phone_no }}" placeholder=" ">
+    <label>Phone</label>
+</div>
+
+<!-- GENDER -->
+<div class="input-group">
+    <i>⚧</i>
+    <select name="gender">
+        <option value="male" {% if user.gender == "male" %}selected{% endif %}>Male</option>
+        <option value="female" {% if user.gender == "female" %}selected{% endif %}>Female</option>
+        <option value="other" {% if user.gender == "other" %}selected{% endif %}>Other</option>
+    </select>
+    <label>Gender</label>
+</div>
+
+<!-- ROLE -->
+<div class="input-group">
+    <i>🎯</i>
+    <select name="role">
+        <option value="admin" {% if user.role == "admin" %}selected{% endif %}>Admin</option>
+        <option value="creator" {% if user.role == "creator" %}selected{% endif %}>Creator</option>
+        <option value="respondent" {% if user.role == "respondent" %}selected{% endif %}>Respondent</option>
+    </select>
+    <label>Role</label>
+</div>
+
+<!-- PASSWORD (OPTIONAL) -->
+<div class="input-group">
+    <i>🔒</i>
+    <input type="password" name="password" id="password" placeholder=" ">
+    <label>New Password (optional)</label>
+
+    <div class="strength-bar">
+        <div id="strength"></div>
+    </div>
+</div>
+
+<!-- BUTTON -->
+<button type="submit" class="submit-btn">Update User</button>
+
+</form>
+
+</div>
+
+<script>
+
+// PASSWORD STRENGTH
+document.getElementById("password").addEventListener("input", function(){
+    let val = this.value;
+    let strength = document.getElementById("strength");
+
+    if(val.length === 0){
+        strength.style.width = "0%";
+    }
+    else if(val.length < 4){
+        strength.style.width = "25%";
+        strength.style.background = "red";
+    }
+    else if(val.length < 8){
+        strength.style.width = "60%";
+        strength.style.background = "orange";
+    }
+    else{
+        strength.style.width = "100%";
+        strength.style.background = "green";
+    }
+});
+
+// EMAIL VALIDATION
+document.querySelector("input[name='email']").addEventListener("input", function(){
+    let error = this.parentElement.querySelector(".error");
+
+    if(!this.value.includes("@")){
+        error.innerText = "Invalid email";
+    } else {
+        error.innerText = "";
+    }
+});
+
+</script>
+
+{% endblock content %}

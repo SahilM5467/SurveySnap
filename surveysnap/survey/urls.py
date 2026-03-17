@@ -3,7 +3,12 @@ from . import views
 
 urlpatterns = [
     path("admin/admin_dashboard",views.AdminDashboardView,name="admin_dashboard"),
+
     path("admin/manage_users",views.MangeUsersView,name="manage_users"),
+    path("admin/users/add/", views.add_user, name="add_user"),
+    path("admin/users/edit/<int:id>/", views.edit_user, name="edit_user"),
+    path("admin/users/delete/<int:id>/", views.delete_user, name="delete_user"),
+
     path("admin/manage_surveys",views.MangeSurveysView,name="manage_surveys"),
     path("admin/manage_templates",views.ManageTemplatesView,name="manage_templates"),
     path("admin/reports",views.ReportsView,name="reports"),

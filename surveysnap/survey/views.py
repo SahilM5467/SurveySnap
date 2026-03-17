@@ -6,6 +6,8 @@ from django.db.models.functions import TruncMonth
 from .decorators import role_required
 from core.models import User
 from survey.models import *
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 
 # Create your views here.
 
@@ -134,10 +136,76 @@ def AdminDashboardView(request):
     }
 
     return render(request,"survey/admin/admin_dashboard.html",context)
+
     
 @role_required(allowed_roles=["admin"])
 def MangeUsersView(request):
-    return render(request,"survey/admin/manage_users.html")
+    search = request.GET.get("search")
+
+    if search:
+        users = User.objects.filter(email__icontains=search)
+    else:
+        users = User.objects.all().order_by("-id")
+
+    context = {
+        "users": users
+    }
+
+    return render(request, "survey/admin/manage_users.html", context)
+
+@role_required(allowed_roles=["admin"])
+def add_user(request):
+
+    if request.method == "POST":
+
+        user = User.objects.create_user(
+            email=request.POST.get("email"),
+            password=request.POST.get("password"),
+            first_name=request.POST.get("first_name"),
+            last_name=request.POST.get("last_name"),
+            gender=request.POST.get("gender"),
+            phone_no=request.POST.get("phone_no"),
+            role=request.POST.get("role"),
+        )
+
+        messages.success(request, "User added successfully")
+        return redirect("manage_users")
+
+    return render(request, "survey/admin/add_user.html")
+
+@role_required(allowed_roles=["admin"])
+def edit_user(request, id):
+
+    user = get_object_or_404(User, id=id)
+
+    if request.method == "POST":
+
+        user.email = request.POST.get("email")
+        user.first_name = request.POST.get("first_name")
+        user.last_name = request.POST.get("last_name")
+        user.gender = request.POST.get("gender")
+        user.phone_no = request.POST.get("phone_no")
+        user.role = request.POST.get("role")
+
+        if request.POST.get("password"):
+            user.set_password(request.POST.get("password"))
+
+        user.save()
+
+        messages.success(request, "User updated successfully")
+        return redirect("manage_users")
+
+    return render(request, "survey/admin/edit_user.html", {"user": user})
+
+@role_required(allowed_roles=["admin"])
+def delete_user(request, id):
+
+    user = get_object_or_404(User, id=id)
+    user.delete()
+
+    messages.success(request, "User deleted successfully")
+    return redirect("manage_users")
+
 
 @role_required(allowed_roles=["admin"])
 def MangeSurveysView(request):

@@ -1,6 +1,134 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
 
-<h1> Manage Users </h1>
+<link rel="stylesheet" href="{% static 'css/manage_users.css' %}">
+
+<div class="users-page">
+
+    <!-- HEADER -->
+    <div class="users-header">
+
+        <div>
+            <h1>Manage Users</h1>
+        </div>
+
+    </div>
+
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+
+        <form method="GET" class="search-container">
+            <input type="text" name="search" placeholder="Search by email..." />
+        </form>
+
+        <div class="filters">
+            <select>
+                <option>All Roles</option>
+                <option>Admin</option>
+                <option>Creator</option>
+                <option>Respondent</option>
+            </select>
+        </div>
+
+        <a href="{% url 'add_user' %}" class="btn-primary">
+            + Add User
+        </a>
+
+    </div>
+
+
+    <!-- TABLE CARD -->
+    <div class="table-card">
+
+        <table class="modern-table">
+
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Contact</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for user in users %}
+                <tr>
+
+                    <!-- USER INFO -->
+                    <td class="user-cell">
+
+                        <div class="avatar">
+                            {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+                        </div>
+
+                        <div class="user-info">
+                            <span class="name">
+                                {{ user.first_name }} {{ user.last_name }}
+                            </span>
+                            <span class="email">
+                                {{ user.email }}
+                            </span>
+                        </div>
+
+                    </td>
+
+                    <!-- CONTACT -->
+                    <td>
+                        {{ user.phone_no|default:"-" }}
+                    </td>
+
+                    <!-- ROLE -->
+                    <td>
+                        <span class="badge role-{{ user.role }}">
+                            {{ user.role }}
+                        </span>
+                    </td>
+
+                    <!-- STATUS -->
+                    <td>
+                        {% if user.is_active %}
+                            <span class="status active">Active</span>
+                        {% else %}
+                            <span class="status inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- DATE -->
+                    <td>
+                        {{ user.created_at|date:"d M Y" }}
+                    </td>
+
+                    <!-- ACTION -->
+                    <td class="actions">
+
+                        <a href="{% url 'edit_user' user.id %}" class="icon-btn edit">
+                            ✏️
+                        </a>
+
+                        <a href="{% url 'delete_user' user.id %}"
+                           class="icon-btn delete"
+                           onclick="return confirm('Delete User?')">
+                           🗑️
+                        </a>
+
+                    </td>
+
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
 
 {% endblock content %}
