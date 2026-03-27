@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="{% static 'css/create_survey.css' %}">
+
+<div class="create-page">
+    <section class="page-header">
+        <div>
+            <span class="eyebrow">Create Survey</span>
+            <h1>Build your next survey</h1>
+            <p class="subtitle">Start a new survey, continue a saved draft, or review templates for structure ideas.</p>
+        </div>
+        <a class="header-link" href="{% url 'my_surveys' %}">
+            <i class="bi bi-folder2-open"></i>
+            <span>My Surveys</span>
+        </a>
+    </section>
+
+    <section class="quick-actions">
+        <a class="action-card action-card-primary" href="{% url 'survey_builder' %}" target="_blank" rel="noopener noreferrer">
+            <div class="action-card-inner">
+                <div class="action-icon">
+                    <i class="bi bi-plus-square"></i>
+                </div>
+                <h3>Start from scratch</h3>
+            </div>
+            <span class="action-link action-link-light">
+                <span>Open builder</span>
+                <i class="bi bi-arrow-right"></i>
+            </span>
+        </a>
+
+        <a class="action-card action-card-drafts" href="{% url 'my_surveys' %}">
+            <div class="action-card-inner">
+                <div class="action-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <h3>Drafts</h3>
+            </div>
+            <span class="action-link">
+                <span>View drafts</span>
+                <i class="bi bi-arrow-right"></i>
+            </span>
+        </a>
+
+        <div class="action-card action-card-templates">
+            <div class="action-card-inner">
+                <div class="action-icon">
+                    <i class="bi bi-grid"></i>
+                </div>
+                <h3>Templates</h3>
+            </div>
+            <span class="action-link">
+                <span>Explore below</span>
+                <i class="bi bi-arrow-down"></i>
+            </span>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Continue Building</span>
+                <h2>Recent Drafts</h2>
+            </div>
+            <a class="section-link" href="{% url 'my_surveys' %}">
+                <i class="bi bi-layout-text-window-reverse"></i>
+                <span>See all surveys</span>
+            </a>
+        </div>
+
+        <div class="content-grid">
+            {% for draft in drafts %}
+                <a class="content-card draft-card" href="{% url 'survey_builder_edit' draft.id %}" target="_blank" rel="noopener noreferrer">
+                    <div class="card-topline">
+                        <span class="badge">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span>{{ draft.get_survey_type_display }}</span>
+                        </span>
+                        <span class="meta-text">Updated {{ draft.updated_at|date:"M d, Y" }}</span>
+                    </div>
+                    <h3>{{ draft.title }}</h3>
+                    <p>{{ draft.description|default:"This draft is ready for your next round of edits in the builder."|truncatechars:110 }}</p>
+                    <div class="card-footer">
+                        <span class="footer-chip">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Open in builder</span>
+                        </span>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="content-card empty-card">
+                    <div class="empty-mark">
+                        <i class="bi bi-file-earmark-plus"></i>
+                    </div>
+                    <h3>No drafts yet</h3>
+                    <p>Your saved surveys will appear here after you start building.</p>
+                    <a class="inline-button" href="{% url 'survey_builder' %}" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Create your first draft</span>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Inspiration Library</span>
+                <h2>Templates</h2>
+            </div>
+            <span class="section-caption">Use these as structure references while creating your next survey.</span>
+        </div>
+
+        <div class="content-grid template-grid">
+            {% for template in templates %}
+                <div class="content-card template-card">
+                    <div class="card-topline">
+                        <span class="badge subtle-badge">
+                            <i class="bi bi-grid-1x2"></i>
+                            <span>{{ template.get_template_type_display }}</span>
+                        </span>
+                        <span class="meta-text">{{ template.category|default:"General" }}</span>
+                    </div>
+                    <h3>{{ template.title }}</h3>
+                    <p>{{ template.description|default:"Reusable survey starter for a faster setup flow."|truncatechars:120 }}</p>
+                    <div class="template-footer">
+                        <span class="footer-chip">
+                            <i class="bi bi-calendar3"></i>
+                            <span>Created {{ template.created_at|date:"M d, Y" }}</span>
+                        </span>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="content-card empty-card">
+                    <div class="empty-mark">
+                        <i class="bi bi-collection"></i>
+                    </div>
+                    <h3>No templates available</h3>
+                    <p>Add templates from the admin panel when you’re ready to build a reusable library.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock content %}

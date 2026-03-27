@@ -1,0 +1,311 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Builder | SurveySnap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/builder.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/SurveySnap-Logo.png' %}">
+</head>
+<body class="builder-body">
+    <div
+        class="builder-shell"
+        data-create-url="{% url 'create_survey' %}"
+        data-builder-url="{% url 'survey_builder' %}">
+        <section class="builder-topbar">
+            <div class="brand-block">
+                <img class="builder-logo" src="{% static 'images/SurveySnap-Logo.png' %}" alt="SurveySnap Logo">
+                <span class="brand-mark">SurveySnap</span>
+                <div class="survey-meta">
+                    <input id="surveyTitleInput" class="survey-title-input" type="text" placeholder="Untitled Survey">
+                    <p class="save-status" id="saveStatus">Ready to build</p>
+                </div>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="mode-toggle" role="tablist" aria-label="Builder mode">
+                    <button type="button" class="mode-button is-active" data-mode="regular">Regular</button>
+                    <button type="button" class="mode-button" data-mode="custom">Custom</button>
+                </div>
+
+                <label class="autosave-toggle" for="autosaveToggle">
+                    <span class="autosave-copy">
+                        <i class="bi bi-arrow-repeat"></i>
+                        <span>AutoSave</span>
+                    </span>
+                    <input type="checkbox" id="autosaveToggle" checked>
+                    <span class="autosave-switch" aria-hidden="true"></span>
+                </label>
+
+                <button type="button" class="ghost-button icon-action-button" id="shareBuilderButton">
+                    <i class="bi bi-share"></i>
+                    <span>Share</span>
+                </button>
+                <button type="button" class="ghost-button" id="manualSaveButton">Save</button>
+                <button type="button" class="ghost-button" id="previewButton">Preview</button>
+                <button type="button" class="primary-button" id="publishButton">Publish</button>
+            </div>
+        </section>
+
+        <section class="builder-layout">
+            <aside class="question-sidebar">
+                <div class="panel-heading">
+                    <p class="eyebrow">Question Types</p>
+                    <h2>Build your survey</h2>
+                </div>
+
+                <div class="question-palette" id="questionPalette">
+                    <button type="button" class="palette-item" data-question-type="short_answer" draggable="true">
+                        <span class="palette-item-icon"><i class="bi bi-input-cursor-text"></i></span>
+                        <span class="palette-item-copy">
+                            <span>Short Answer</span>
+                            <small>Single line response</small>
+                        </span>
+                    </button>
+                    <button type="button" class="palette-item" data-question-type="paragraph" draggable="true">
+                        <span class="palette-item-icon"><i class="bi bi-text-paragraph"></i></span>
+                        <span class="palette-item-copy">
+                            <span>Paragraph</span>
+                            <small>Long text feedback</small>
+                        </span>
+                    </button>
+                    <button type="button" class="palette-item" data-question-type="multiple_choice" draggable="true">
+                        <span class="palette-item-icon"><i class="bi bi-ui-radios"></i></span>
+                        <span class="palette-item-copy">
+                            <span>Multiple Choice</span>
+                            <small>Pick one option</small>
+                        </span>
+                    </button>
+                    <button type="button" class="palette-item" data-question-type="checkboxes" draggable="true">
+                        <span class="palette-item-icon"><i class="bi bi-check2-square"></i></span>
+                        <span class="palette-item-copy">
+                            <span>Checkboxes</span>
+                            <small>Select many options</small>
+                        </span>
+                    </button>
+                    <button type="button" class="palette-item" data-question-type="dropdown" draggable="true">
+                        <span class="palette-item-icon"><i class="bi bi-menu-button-wide"></i></span>
+                        <span class="palette-item-copy">
+                            <span>Dropdown</span>
+                            <small>Compact option list</small>
+                        </span>
+                    </button>
+                    <button type="button" class="palette-item" data-question-type="date" draggable="true">
+                        <span class="palette-item-icon"><i class="bi bi-calendar3"></i></span>
+                        <span class="palette-item-copy">
+                            <span>Date</span>
+                            <small>Date picker</small>
+                        </span>
+                    </button>
+                    <button type="button" class="palette-item" data-question-type="rating" draggable="true">
+                        <span class="palette-item-icon"><i class="bi bi-star"></i></span>
+                        <span class="palette-item-copy">
+                            <span>Rating</span>
+                            <small>Star feedback</small>
+                        </span>
+                    </button>
+                    <button type="button" class="palette-item" data-question-type="file_upload" draggable="true">
+                        <span class="palette-item-icon"><i class="bi bi-cloud-arrow-up"></i></span>
+                        <span class="palette-item-copy">
+                            <span>File Upload</span>
+                            <small>Collect attachments</small>
+                        </span>
+                    </button>
+                </div>
+
+                <div class="sidebar-tip">
+                    <p>Tip</p>
+                    <span>Drag items into the custom canvas or click to add them to the active mode.</span>
+                </div>
+            </aside>
+
+            <main class="builder-main">
+                <section class="survey-overview-card">
+                    <label class="field">
+                        <span>Survey Title</span>
+                        <input id="surveyHeaderTitleInput" type="text" placeholder="Untitled Survey">
+                    </label>
+
+                    <label class="field">
+                        <span>Description</span>
+                        <textarea id="surveyDescriptionInput" rows="3" placeholder="Tell respondents what this survey is about"></textarea>
+                    </label>
+                </section>
+
+                <section class="builder-stage regular-stage is-visible" id="regularStage">
+                    <div class="stage-header">
+                        <div>
+                            <p class="eyebrow">Regular Mode</p>
+                            <h3>Form builder</h3>
+                        </div>
+                        <button type="button" class="secondary-button" id="addQuestionButton">Add Question</button>
+                    </div>
+
+                    <div class="question-list" id="questionList"></div>
+                </section>
+
+                <section class="builder-stage custom-stage" id="customStage">
+                    <div class="stage-header">
+                        <div>
+                            <p class="eyebrow">Custom Mode</p>
+                            <h3>Drag questions on the canvas</h3>
+                        </div>
+                        <p class="canvas-helper">Drop blocks from the left panel and drag or resize them freely.</p>
+                    </div>
+
+                    <div class="custom-canvas" id="customCanvas">
+                        <div class="canvas-drop-hint" id="canvasDropHint">
+                            Drop a question here to build a custom layout.
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <aside class="settings-panel">
+                <div class="panel-heading">
+                    <p class="eyebrow">Settings</p>
+                    <h2>Customize</h2>
+                </div>
+
+                <div class="settings-group">
+                    <label class="field">
+                        <span>Accent Color</span>
+                        <input id="accentColorInput" type="color" value="#2563eb">
+                    </label>
+
+                    <label class="field">
+                        <span>Font Family</span>
+                        <select id="fontFamilySelect">
+                            <option value="Poppins, sans-serif">Poppins</option>
+                            <option value="'DM Sans', sans-serif">DM Sans</option>
+                            <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
+                        </select>
+                    </label>
+
+                    <div class="appearance-selector">
+                        <button type="button" class="appearance-chip is-active" data-appearance="light">Light</button>
+                        <button type="button" class="appearance-chip" data-appearance="dark">Dark</button>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <label class="toggle-row">
+                        <span>Collect email</span>
+                        <input id="collectEmailToggle" type="checkbox">
+                    </label>
+                    <label class="toggle-row">
+                        <span>Anonymous responses</span>
+                        <input id="anonymousToggle" type="checkbox" checked>
+                    </label>
+                </div>
+
+                <div class="settings-group share-group">
+                    <div class="share-row">
+                        <span>Share Link</span>
+                        <button type="button" class="text-button" id="copyShareButton">Copy</button>
+                    </div>
+                    <input id="shareUrlInput" type="text" readonly placeholder="Publish the survey to generate a shareable link">
+                    <div class="qr-preview" id="qrPreview"></div>
+                </div>
+            </aside>
+        </section>
+    </div>
+
+    <div class="share-modal" id="shareModal" hidden>
+        <div class="share-modal-backdrop" data-share-close></div>
+        <section class="share-modal-panel" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+            <div class="share-modal-header">
+                <div>
+                    <p class="eyebrow">Share Survey</p>
+                    <h2 id="shareModalTitle">Share your published survey</h2>
+                </div>
+                <button type="button" class="share-close-button" id="closeShareModalButton" aria-label="Close share dialog">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="share-modal-body">
+                <div class="share-modal-main">
+                    <div class="share-highlight-card">
+                        <div class="share-highlight-copy">
+                            <h3>Ready to send</h3>
+                            <p id="shareHelperText">Publish your survey to unlock the public link, QR code, and social sharing options.</p>
+                        </div>
+                        <div class="share-link-stack">
+                            <label class="field share-modal-field">
+                                <span>Public link</span>
+                                <div class="share-link-row">
+                                    <input id="shareModalUrlInput" type="text" readonly placeholder="Publish the survey to generate a shareable link">
+                                    <button type="button" class="secondary-button" id="copyShareModalButton">
+                                        <i class="bi bi-copy"></i>
+                                        <span>Copy</span>
+                                    </button>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="share-channels-card">
+                        <div class="share-card-heading">
+                            <h3>Share channels</h3>
+                            <p>Send your survey through the channel that fits your audience.</p>
+                        </div>
+
+                        <div class="share-social-grid">
+                            <button type="button" class="share-social-button" data-share-network="native">
+                                <i class="bi bi-send"></i>
+                                <span>System Share</span>
+                            </button>
+                            <button type="button" class="share-social-button" data-share-network="whatsapp">
+                                <i class="bi bi-whatsapp"></i>
+                                <span>WhatsApp</span>
+                            </button>
+                            <button type="button" class="share-social-button" data-share-network="linkedin">
+                                <i class="bi bi-linkedin"></i>
+                                <span>LinkedIn</span>
+                            </button>
+                            <button type="button" class="share-social-button" data-share-network="facebook">
+                                <i class="bi bi-facebook"></i>
+                                <span>Facebook</span>
+                            </button>
+                            <button type="button" class="share-social-button" data-share-network="twitter">
+                                <i class="bi bi-twitter-x"></i>
+                                <span>X</span>
+                            </button>
+                            <button type="button" class="share-social-button" data-share-network="instagram">
+                                <i class="bi bi-instagram"></i>
+                                <span>Instagram</span>
+                            </button>
+                            <button type="button" class="share-social-button" data-share-network="email">
+                                <i class="bi bi-envelope"></i>
+                                <span>Email</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="share-qr-card">
+                    <div class="share-card-heading">
+                        <h3>QR Code</h3>
+                        <p>Scan or download the QR for quick access.</p>
+                    </div>
+                    <div class="share-modal-qr" id="shareModalQrPreview"></div>
+                    <div class="share-qr-actions">
+                        <button type="button" class="ghost-button" id="downloadQrButton">
+                            <i class="bi bi-download"></i>
+                            <span>Download QR</span>
+                        </button>
+                    </div>
+                </aside>
+            </div>
+        </section>
+    </div>
+
+    {{ builder_bootstrap|json_script:"builder-bootstrap" }}
+    <script src="{% static 'js/builder.js' %}"></script>
+</body>
+</html>

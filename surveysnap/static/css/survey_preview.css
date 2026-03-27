@@ -1,0 +1,138 @@
+.survey-preview-page {
+    --preview-surface: #ffffff;
+    --preview-bg: linear-gradient(180deg, #eff5ff 0%, #f9fbff 100%);
+    --preview-text: #183153;
+    --preview-text-soft: #5f7695;
+    min-height: 100vh;
+    padding: 40px 18px 80px;
+    background: var(--preview-bg);
+    color: var(--preview-text);
+    font-family: var(--survey-font, "Poppins", sans-serif);
+}
+
+.survey-preview-page.is-dark {
+    --preview-surface: #102033;
+    --preview-bg: linear-gradient(180deg, #081120 0%, #0d1828 100%);
+    --preview-text: #f4f7fb;
+    --preview-text-soft: #b8c4d6;
+}
+
+.preview-hero,
+.question-preview-stack,
+.custom-preview-canvas {
+    width: min(960px, 100%);
+    margin: 0 auto;
+}
+
+.preview-hero {
+    padding: 28px;
+    margin-bottom: 24px;
+    border-radius: 28px;
+    background: var(--preview-surface);
+    box-shadow: 0 20px 45px rgba(16, 32, 51, 0.12);
+}
+
+.preview-badge,
+.required-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.preview-badge {
+    color: #fff;
+    background: var(--survey-accent, #2563eb);
+}
+
+.required-pill {
+    color: var(--survey-accent, #2563eb);
+    background: color-mix(in srgb, var(--survey-accent, #2563eb) 12%, #ffffff);
+}
+
+.preview-card,
+.canvas-preview-item,
+.empty-preview {
+    background: var(--preview-surface);
+    border-radius: 24px;
+    box-shadow: 0 18px 40px rgba(16, 32, 51, 0.1);
+}
+
+.question-preview-stack {
+    display: grid;
+    gap: 18px;
+}
+
+.preview-card {
+    padding: 22px;
+}
+
+.preview-question-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.preview-question-head h3 {
+    margin: 0;
+}
+
+.preview-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--preview-text-soft);
+    margin-bottom: 10px;
+}
+
+.preview-card input[type="text"],
+.preview-card input[type="date"],
+.preview-card input[type="file"],
+.preview-card select,
+.preview-card textarea,
+.canvas-preview-item input[type="text"],
+.canvas-preview-item input[type="date"],
+.canvas-preview-item input[type="file"],
+.canvas-preview-item select,
+.canvas-preview-item textarea {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(95, 118, 149, 0.22);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+}
+
+.preview-stars {
+    color: #f59e0b;
+    letter-spacing: 0.2em;
+    font-size: 1.25rem;
+}
+
+.custom-preview-canvas {
+    position: relative;
+    min-height: 720px;
+    padding: 18px;
+    border-radius: 32px;
+    background:
+        linear-gradient(rgba(95, 118, 149, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(95, 118, 149, 0.08) 1px, transparent 1px),
+        transparent;
+    background-size: 32px 32px;
+}
+
+.canvas-preview-item {
+    position: absolute;
+    padding: 18px;
+}
+
+.empty-preview {
+    padding: 32px;
+    text-align: center;
+    color: var(--preview-text-soft);
+}

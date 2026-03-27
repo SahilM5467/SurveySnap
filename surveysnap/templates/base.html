@@ -46,10 +46,10 @@
     </head>
 <body>
 
-    {% if show_home_navbar %}
+    {% if not hide_navbar and show_home_navbar %}
         {% include "home_navbar.html" %}
 
-    {% elif request.user.is_authenticated %}
+    {% elif not hide_navbar and request.user.is_authenticated %}
 
         {% if request.user.role == "admin" %}
             {% include "survey/admin/admin_navbar.html" %}
@@ -71,7 +71,9 @@
         </div>
     </div>
 
-    {% include "footer.html" %}
+    {% if not hide_footer %}
+        {% include "footer.html" %}
+    {% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

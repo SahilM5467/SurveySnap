@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/survey_preview.css' %}">
+
+<div
+    class="survey-preview-page {% if survey_payload.theme.appearance == 'dark' %}is-dark{% endif %}"
+    style="
+        --survey-accent: {{ survey_payload.theme.accent_color|default:'#2563eb' }};
+        --survey-font: {{ survey_payload.theme.font_family|default:'Poppins, sans-serif' }};
+    "
+>
+    <section class="preview-hero">
+        <p class="preview-badge">{% if preview_mode %}Preview Mode{% else %}Live Survey{% endif %}</p>
+        <h1>{{ survey.title }}</h1>
+        <p>{{ survey.description|default:"No description added yet." }}</p>
+    </section>
+
+    {% if survey.survey_type == "custom" %}
+        <section class="custom-preview-canvas">
+            {% for element in survey.canvas_elements.all %}
+                <article
+                    class="canvas-preview-item"
+                    style="left: {{ element.x }}px; top: {{ element.y }}px; width: {{ element.width }}px; min-height: {{ element.height }}px; z-index: {{ element.z_index }};"
+                >
+                    {% if element.question %}
+                        <div class="preview-question-head">
+                            <h3>{{ element.question.question_text }}</h3>
+                            {% if element.question.is_required %}
+                                <span class="required-pill">Required</span>
+                            {% endif %}
+                        </div>
+
+                        {% if element.question.question_type == "multiple_choice" %}
+                            {% for option in element.question.options.all %}
+                                <label class="preview-option"><input type="radio" disabled> {{ option.option_text }}</label>
+                            {% endfor %}
+                        {% elif element.question.question_type == "checkboxes" %}
+                            {% for option in element.question.options.all %}
+                                <label class="preview-option"><input type="checkbox" disabled> {{ option.option_text }}</label>
+                            {% endfor %}
+                        {% elif element.question.question_type == "dropdown" %}
+                            <select disabled>
+                                <option>Select an option</option>
+                                {% for option in element.question.options.all %}
+                                    <option>{{ option.option_text }}</option>
+                                {% endfor %}
+                            </select>
+                        {% elif element.question.question_type == "paragraph" %}
+                            <textarea rows="4" disabled placeholder="Long answer text"></textarea>
+                        {% elif element.question.question_type == "date" %}
+                            <input type="date" disabled>
+                        {% elif element.question.question_type == "rating" %}
+                            <div class="preview-stars">★★★★★</div>
+                        {% elif element.question.question_type == "file_upload" %}
+                            <input type="file" disabled>
+                        {% else %}
+                            <input type="text" disabled placeholder="Short answer text">
+                        {% endif %}
+                    {% else %}
+                        <p>{{ element.content.label|default:"Canvas block" }}</p>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <div class="empty-preview">No custom elements saved yet.</div>
+            {% endfor %}
+        </section>
+    {% else %}
+        <section class="question-preview-stack">
+            {% for question in survey.questions.all %}
+                <article class="preview-card">
+                    <div class="preview-question-head">
+                        <h3>{{ forloop.counter }}. {{ question.question_text }}</h3>
+                        {% if question.is_required %}
+                            <span class="required-pill">Required</span>
+                        {% endif %}
+                    </div>
+
+                    {% if question.question_type == "multiple_choice" %}
+                        {% for option in question.options.all %}
+                            <label class="preview-option"><input type="radio" disabled> {{ option.option_text }}</label>
+                        {% endfor %}
+                    {% elif question.question_type == "checkboxes" %}
+                        {% for option in question.options.all %}
+                            <label class="preview-option"><input type="checkbox" disabled> {{ option.option_text }}</label>
+                        {% endfor %}
+                    {% elif question.question_type == "dropdown" %}
+                        <select disabled>
+                            <option>Select an option</option>
+                            {% for option in question.options.all %}
+                                <option>{{ option.option_text }}</option>
+                            {% endfor %}
+                        </select>
+                    {% elif question.question_type == "paragraph" %}
+                        <textarea rows="4" disabled placeholder="Long answer text"></textarea>
+                    {% elif question.question_type == "date" %}
+                        <input type="date" disabled>
+                    {% elif question.question_type == "rating" %}
+                        <div class="preview-stars">★★★★★</div>
+                    {% elif question.question_type == "file_upload" %}
+                        <input type="file" disabled>
+                    {% else %}
+                        <input type="text" disabled placeholder="Short answer text">
+                    {% endif %}
+                </article>
+            {% empty %}
+                <div class="empty-preview">No questions added yet.</div>
+            {% endfor %}
+        </section>
+    {% endif %}
+</div>
+{% endblock content %}
