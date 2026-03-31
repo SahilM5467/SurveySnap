@@ -11,103 +11,160 @@
         --survey-font: {{ survey_payload.theme.font_family|default:'Poppins, sans-serif' }};
     "
 >
-    <section class="preview-hero">
-        <p class="preview-badge">{% if preview_mode %}Preview Mode{% else %}Live Survey{% endif %}</p>
-        <h1>{{ survey.title }}</h1>
-        <p>{{ survey.description|default:"No description added yet." }}</p>
-    </section>
-
-    {% if survey.survey_type == "custom" %}
-        <section class="custom-preview-canvas">
-            {% for element in survey.canvas_elements.all %}
-                <article
-                    class="canvas-preview-item"
-                    style="left: {{ element.x }}px; top: {{ element.y }}px; width: {{ element.width }}px; min-height: {{ element.height }}px; z-index: {{ element.z_index }};"
-                >
-                    {% if element.question %}
-                        <div class="preview-question-head">
-                            <h3>{{ element.question.question_text }}</h3>
-                            {% if element.question.is_required %}
-                                <span class="required-pill">Required</span>
-                            {% endif %}
-                        </div>
-
-                        {% if element.question.question_type == "multiple_choice" %}
-                            {% for option in element.question.options.all %}
-                                <label class="preview-option"><input type="radio" disabled> {{ option.option_text }}</label>
-                            {% endfor %}
-                        {% elif element.question.question_type == "checkboxes" %}
-                            {% for option in element.question.options.all %}
-                                <label class="preview-option"><input type="checkbox" disabled> {{ option.option_text }}</label>
-                            {% endfor %}
-                        {% elif element.question.question_type == "dropdown" %}
-                            <select disabled>
-                                <option>Select an option</option>
-                                {% for option in element.question.options.all %}
-                                    <option>{{ option.option_text }}</option>
-                                {% endfor %}
-                            </select>
-                        {% elif element.question.question_type == "paragraph" %}
-                            <textarea rows="4" disabled placeholder="Long answer text"></textarea>
-                        {% elif element.question.question_type == "date" %}
-                            <input type="date" disabled>
-                        {% elif element.question.question_type == "rating" %}
-                            <div class="preview-stars">★★★★★</div>
-                        {% elif element.question.question_type == "file_upload" %}
-                            <input type="file" disabled>
-                        {% else %}
-                            <input type="text" disabled placeholder="Short answer text">
-                        {% endif %}
-                    {% else %}
-                        <p>{{ element.content.label|default:"Canvas block" }}</p>
-                    {% endif %}
-                </article>
-            {% empty %}
-                <div class="empty-preview">No custom elements saved yet.</div>
-            {% endfor %}
+    <div class="preview-shell">
+        <section class="preview-header-card">
+            <div class="form-accent-bar"></div>
+            <div class="preview-header-body">
+                <h1>{{ survey.title }}</h1>
+                <p class="preview-description">{{ survey.description|default:"No description added yet." }}</p>
+            </div>
         </section>
-    {% else %}
-        <section class="question-preview-stack">
-            {% for question in survey.questions.all %}
-                <article class="preview-card">
+
+        {% if show_private_access_gate %}
+            <form class="respondent-preview-form private-access-form" id="surveyPreviewForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="private_access">
+                <section class="private-access-card">
                     <div class="preview-question-head">
-                        <h3>{{ forloop.counter }}. {{ question.question_text }}</h3>
-                        {% if question.is_required %}
-                            <span class="required-pill">Required</span>
-                        {% endif %}
+                        <div>
+                            <span class="question-label">Private Survey</span>
+                            <h3>Login complete. Enter the survey password to continue.</h3>
+                        </div>
+                        <span class="required-pill">Protected</span>
                     </div>
+                    <p class="preview-description">
+                        This survey is private. Authorized users must login first and then enter the password shared by the survey creator.
+                    </p>
+                    <div class="field-shell private-access-input-shell">
+                        <input type="password" name="survey_password" placeholder="Enter survey password" required>
+                    </div>
+                    <div class="preview-actions-card preview-actions-card-inline">
+                        <div class="preview-action-row">
+                            <button type="submit" class="preview-primary-button">Unlock survey</button>
+                        </div>
+                    </div>
+                </section>
+            </form>
+        {% else %}
+            <form class="respondent-preview-form" id="surveyPreviewForm" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if survey.survey_type == "custom" %}
+                    <section class="custom-preview-canvas">
+                        {% for item in preview_canvas_elements %}
+                            <article
+                                class="canvas-preview-item"
+                                style="left: {{ item.element.x }}px; top: {{ item.element.y }}px; width: {{ item.element.width }}px; min-height: {{ item.element.height }}px; z-index: {{ item.element.z_index }};"
+                            >
+                                {% if item.element.question %}
+                                    <div class="preview-question-head">
+                                        <div>
+                                            <span class="question-label">Question</span>
+                                            <h3>{{ item.element.question.question_text }}</h3>
+                                        </div>
+                                        {% if item.element.question.is_required %}
+                                            <span class="required-pill">Required</span>
+                                        {% endif %}
+                                    </div>
 
-                    {% if question.question_type == "multiple_choice" %}
-                        {% for option in question.options.all %}
-                            <label class="preview-option"><input type="radio" disabled> {{ option.option_text }}</label>
+                                    {% with question=item.element.question question_number=forloop.counter %}
+                                        {% include "survey/creator/partials/preview_question_input.html" %}
+                                    {% endwith %}
+                                {% else %}
+                                    <p class="canvas-label">{{ item.element.content.label|default:"Canvas block" }}</p>
+                                {% endif %}
+                            </article>
+                        {% empty %}
+                            <div class="empty-preview">No custom elements saved yet.</div>
                         {% endfor %}
-                    {% elif question.question_type == "checkboxes" %}
-                        {% for option in question.options.all %}
-                            <label class="preview-option"><input type="checkbox" disabled> {{ option.option_text }}</label>
+                    </section>
+                {% else %}
+                    <section class="question-preview-stack">
+                        {% for item in preview_questions %}
+                            <article class="preview-card">
+                                <div class="preview-question-head">
+                                    <div>
+                                        <span class="question-label">Question {{ item.question_number }}</span>
+                                        <h3>{{ item.question.question_text }}</h3>
+                                    </div>
+                                    {% if item.question.is_required %}
+                                        <span class="required-pill">Required</span>
+                                    {% endif %}
+                                </div>
+
+                                {% with question=item.question question_number=item.question_number %}
+                                    {% include "survey/creator/partials/preview_question_input.html" %}
+                                {% endwith %}
+                            </article>
+                        {% empty %}
+                            <div class="empty-preview">No questions added yet.</div>
                         {% endfor %}
-                    {% elif question.question_type == "dropdown" %}
-                        <select disabled>
-                            <option>Select an option</option>
-                            {% for option in question.options.all %}
-                                <option>{{ option.option_text }}</option>
-                            {% endfor %}
-                        </select>
-                    {% elif question.question_type == "paragraph" %}
-                        <textarea rows="4" disabled placeholder="Long answer text"></textarea>
-                    {% elif question.question_type == "date" %}
-                        <input type="date" disabled>
-                    {% elif question.question_type == "rating" %}
-                        <div class="preview-stars">★★★★★</div>
-                    {% elif question.question_type == "file_upload" %}
-                        <input type="file" disabled>
-                    {% else %}
-                        <input type="text" disabled placeholder="Short answer text">
-                    {% endif %}
-                </article>
-            {% empty %}
-                <div class="empty-preview">No questions added yet.</div>
-            {% endfor %}
-        </section>
-    {% endif %}
+                    </section>
+                {% endif %}
+
+                {% if survey.questions.exists %}
+                    <div class="preview-actions-card">
+                        <div class="preview-action-row">
+                            <button type="reset" class="preview-secondary-button">Clear form</button>
+                            <button type="submit" class="preview-primary-button">
+                                {% if preview_mode %}Test submit{% else %}Submit response{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        {% endif %}
+    </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("surveyPreviewForm");
+    if (!form) {
+        return;
+    }
+
+    const updateRatingGroup = function (group) {
+        const choices = Array.from(group.querySelectorAll(".rating-choice"));
+        const checkedInput = group.querySelector("input:checked");
+        const selectedValue = checkedInput ? Number(checkedInput.value) : 0;
+
+        choices.forEach(function (choice) {
+            const input = choice.querySelector("input");
+            const value = Number(input.value);
+            choice.classList.toggle("is-active", value <= selectedValue);
+        });
+    };
+
+    form.querySelectorAll(".preview-rating-input").forEach(function (group) {
+        updateRatingGroup(group);
+        group.addEventListener("change", function () {
+            updateRatingGroup(group);
+        });
+    });
+
+    {% if preview_mode %}
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            Swal.fire({
+                title: "Preview submission only",
+                text: "This test response is not stored in the database.",
+                icon: "success",
+                confirmButtonColor: "#2563eb",
+                confirmButtonText: "Continue testing"
+            });
+        });
+    {% endif %}
+
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                title: "{% if message.tags == 'success' %}Success{% elif message.tags == 'error' %}Error{% else %}Notice{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% else %}info{% endif %}",
+                confirmButtonColor: "#2563eb"
+            });
+        {% endfor %}
+    {% endif %}
+});
+</script>
 {% endblock content %}

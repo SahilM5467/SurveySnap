@@ -38,6 +38,7 @@
             this.activeCanvasPointer = null;
             this.autosaveTimer = null;
             this.localPersistTimer = null;
+            this.toastTimerIds = new WeakMap();
             this.isDirty = false;
             this.isSaving = false;
             this.state = this.buildInitialState(bootstrapData);
@@ -56,14 +57,18 @@
                 title: source.title || "Untitled Survey",
                 description: source.description || "",
                 mode: source.mode || "regular",
+                visibility: source.visibility || "public",
                 theme: source.theme || {
                     appearance: "light",
                     accent_color: "#2563eb",
                     font_family: "Poppins, sans-serif",
                 },
-                settings: source.settings || {
+                settings: {
                     collect_email: false,
                     is_anonymous: true,
+                    access_password: "",
+                    private_password_configured: false,
+                    ...(source.settings || {}),
                 },
                 questions: (source.questions || []).map((question, index) =>
                     this.normalizeQuestion(question, index)
@@ -98,6 +103,9 @@
             this.customStage = document.getElementById("customStage");
             this.accentColorInput = document.getElementById("accentColorInput");
             this.fontFamilySelect = document.getElementById("fontFamilySelect");
+            this.privatePasswordField = document.getElementById("privatePasswordField");
+            this.privatePasswordInput = document.getElementById("privatePasswordInput");
+            this.privatePasswordHelper = document.getElementById("privatePasswordHelper");
             this.collectEmailToggle = document.getElementById("collectEmailToggle");
             this.anonymousToggle = document.getElementById("anonymousToggle");
             this.shareUrlInput = document.getElementById("shareUrlInput");
@@ -120,7 +128,9 @@
             this.shareCloseTargets = [...document.querySelectorAll("[data-share-close]")];
             this.modeButtons = [...document.querySelectorAll(".mode-button")];
             this.appearanceButtons = [...document.querySelectorAll(".appearance-chip")];
+            this.visibilityButtons = [...document.querySelectorAll("[data-visibility]")];
             this.paletteItems = [...document.querySelectorAll(".palette-item")];
+            this.toastViewport = this.ensureToastViewport();
         }
 
         bindEvents() {
@@ -151,6 +161,12 @@
                 this.markDirty("Font updated");
             });
 
+            this.privatePasswordInput.addEventListener("input", (event) => {
+                this.state.settings.access_password = event.target.value;
+                this.markDirty("Private access updated");
+                this.renderSettings();
+            });
+
             this.collectEmailToggle.addEventListener("change", (event) => {
                 this.state.settings.collect_email = event.target.checked;
                 this.markDirty("Response settings updated");
@@ -170,6 +186,15 @@
                     this.state.theme.appearance = button.dataset.appearance;
                     this.markDirty("Appearance updated");
                     this.renderSettings();
+                });
+            });
+
+            this.visibilityButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    this.state.visibility = button.dataset.visibility;
+                    this.markDirty("Access settings updated");
+                    this.renderSettings();
+                    this.renderShareModal();
                 });
             });
 
@@ -683,24 +708,38 @@
             this.surveyHeaderTitleInput.value = this.state.title;
             this.descriptionInput.value = this.state.description;
             this.shareUrlInput.value = this.state.shareUrl;
-            this.qrPreview.innerHTML = this.state.qrSvg || "<span>QR code will appear here after publish.</span>";
             this.shareModalUrlInput.value = this.state.shareUrl;
-            this.shareModalQrPreview.innerHTML = this.state.qrSvg || "<span>QR code will appear here after publish.</span>";
+            this.renderQrPreview(this.qrPreview);
+            this.renderQrPreview(this.shareModalQrPreview);
             this.publishButton.classList.toggle("is-unpublished", this.state.isPublished);
             this.publishButton.innerHTML = this.state.isPublished
                 ? '<i class="bi bi-eye-slash"></i><span>Unpublish</span>'
                 : '<i class="bi bi-send-check"></i><span>Publish</span>';
             this.shareBuilderButton.innerHTML = this.state.isPublished
-                ? '<i class="bi bi-share"></i><span>Share</span>'
+                ? `<i class="bi ${this.state.visibility === "private" ? "bi-shield-lock" : "bi-share"}"></i><span>Share</span>`
                 : '<i class="bi bi-lock"></i><span>Share</span>';
         }
 
         renderSettings() {
+            const isPrivateSurvey = this.state.visibility === "private";
             this.accentColorInput.value = this.state.theme.accent_color || "#2563eb";
             this.fontFamilySelect.value = this.state.theme.font_family || "Poppins, sans-serif";
+            this.privatePasswordField.hidden = !isPrivateSurvey;
+            this.privatePasswordField.style.display = isPrivateSurvey ? "grid" : "none";
+            this.privatePasswordInput.type = "password";
+            this.privatePasswordInput.value = this.state.settings.access_password || "";
+            this.privatePasswordInput.required = isPrivateSurvey;
             this.collectEmailToggle.checked = Boolean(this.state.settings.collect_email);
             this.anonymousToggle.checked = Boolean(this.state.settings.is_anonymous);
             this.autosaveToggle.checked = Boolean(this.state.autosaveEnabled);
+
+            const hasSavedPrivatePassword = Boolean(this.state.settings.private_password_configured);
+            const hasDraftPassword = Boolean((this.state.settings.access_password || "").trim());
+            this.privatePasswordHelper.textContent = hasDraftPassword
+                ? "Private survey access is protected by this password after login."
+                : hasSavedPrivatePassword
+                    ? "A password is already saved for this survey. Enter a new one only if you want to change it."
+                    : "Anyone opening this private survey must login first, then enter this password.";
 
             this.modeButtons.forEach((button) => {
                 button.classList.toggle("is-active", button.dataset.mode === this.state.mode);
@@ -712,16 +751,44 @@
                     button.dataset.appearance === this.state.theme.appearance
                 );
             });
+
+            this.visibilityButtons.forEach((button) => {
+                button.classList.toggle(
+                    "is-active",
+                    button.dataset.visibility === this.state.visibility
+                );
+            });
         }
 
         renderShareModal() {
-            this.shareHelperText.textContent = this.state.isPublished
-                ? "Copy the public link, download the QR, or share directly to your audience."
-                : "Publish your survey to unlock the public link, QR code, and social sharing options.";
+            if (this.state.isPublished) {
+                this.shareHelperText.textContent = this.state.visibility === "private"
+                    ? "Share this private link with people who should login and enter the survey password."
+                    : "Copy the public link, download the QR, or share directly to your audience.";
+            } else {
+                this.shareHelperText.textContent = "Publish your survey to unlock the share link, QR code, and social sharing options.";
+            }
             this.downloadQrButton.disabled = !this.state.qrSvg;
             this.shareSocialButtons.forEach((button) => {
                 button.disabled = !this.state.isPublished;
             });
+        }
+
+        renderQrPreview(target) {
+            if (!target) {
+                return;
+            }
+
+            if (!this.state.qrSvg) {
+                target.innerHTML = "<span>QR code will appear here after publish.</span>";
+                return;
+            }
+
+            const image = document.createElement("img");
+            image.src = this.buildQrDataUrl();
+            image.alt = `${(this.state.title || "Survey").trim()} QR code`;
+            image.loading = "lazy";
+            target.replaceChildren(image);
         }
 
         renderModes() {
@@ -918,6 +985,7 @@
                 title: (this.state.title || "Untitled Survey").trim(),
                 description: this.state.description,
                 mode: this.state.mode,
+                visibility: this.state.visibility,
                 theme: this.state.theme,
                 settings: this.state.settings,
                 questions: this.state.questions.map((question) => ({
@@ -958,6 +1026,16 @@
                 return false;
             }
 
+            if (
+                forPublish &&
+                this.state.visibility === "private" &&
+                !this.state.settings.private_password_configured &&
+                !(this.state.settings.access_password || "").trim()
+            ) {
+                this.notify("Add a password before publishing a private survey.", "error");
+                return false;
+            }
+
             if (forPublish) {
                 for (const [index, question] of this.state.questions.entries()) {
                     if (!question.question_text.trim()) {
@@ -984,6 +1062,7 @@
                 title: this.state.title,
                 description: this.state.description,
                 mode: this.state.mode,
+                visibility: this.state.visibility,
                 theme: this.state.theme,
                 settings: this.state.settings,
             });
@@ -1101,12 +1180,17 @@
         }
 
         ingestServerSurvey(survey) {
+            const localDraftPassword = this.state.settings.access_password || "";
             this.state.surveyId = survey.survey_id;
             this.state.title = survey.title;
             this.state.description = survey.description;
             this.state.mode = survey.mode;
+            this.state.visibility = survey.visibility || this.state.visibility;
             this.state.theme = survey.theme;
-            this.state.settings = survey.settings;
+            this.state.settings = {
+                ...(survey.settings || {}),
+                access_password: localDraftPassword || (survey.settings?.access_password || ""),
+            };
             this.state.questions = (survey.questions || []).map((question, index) =>
                 this.normalizeQuestion(question, index)
             );
@@ -1219,22 +1303,75 @@
             window.open(shareUrl, "_blank", "noopener,noreferrer,width=720,height=680");
         }
 
-        downloadQrCode() {
+        buildQrDataUrl() {
+            return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(this.state.qrSvg)}`;
+        }
+
+        buildQrFilename(extension) {
+            const baseName = (this.state.title || "survey")
+                .trim()
+                .replace(/[^a-z0-9]+/gi, "-")
+                .replace(/^-+|-+$/g, "")
+                .toLowerCase();
+            return `${baseName || "survey"}-qr.${extension}`;
+        }
+
+        async downloadQrCode() {
             const svg = this.state.qrSvg;
             if (!svg) {
                 this.notify("Publish the survey to generate a QR code first.", "info");
                 return;
             }
 
-            const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-            const objectUrl = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = objectUrl;
-            link.download = `${(this.state.title || "survey").trim().replace(/\s+/g, "-").toLowerCase()}-qr.svg`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(objectUrl);
+            const image = new Image();
+            image.decoding = "async";
+
+            try {
+                await new Promise((resolve, reject) => {
+                    image.onload = resolve;
+                    image.onerror = () => reject(new Error("Unable to render the QR code for download."));
+                    image.src = this.buildQrDataUrl();
+                });
+
+                const size = Math.max(image.naturalWidth || 512, image.naturalHeight || 512, 512);
+                const canvas = document.createElement("canvas");
+                canvas.width = size;
+                canvas.height = size;
+
+                const context = canvas.getContext("2d");
+                if (!context) {
+                    throw new Error("Canvas export is not available in this browser.");
+                }
+
+                context.fillStyle = "#ffffff";
+                context.fillRect(0, 0, size, size);
+                context.drawImage(image, 0, 0, size, size);
+
+                const jpegBlob = await new Promise((resolve, reject) => {
+                    canvas.toBlob(
+                        (blob) => {
+                            if (blob) {
+                                resolve(blob);
+                                return;
+                            }
+                            reject(new Error("Unable to generate the JPEG file."));
+                        },
+                        "image/jpeg",
+                        0.95
+                    );
+                });
+
+                const objectUrl = URL.createObjectURL(jpegBlob);
+                const link = document.createElement("a");
+                link.href = objectUrl;
+                link.download = this.buildQrFilename("jpg");
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(objectUrl);
+            } catch (error) {
+                this.notify(error.message || "Unable to download the QR code right now.", "error");
+            }
         }
 
         markDirty(status) {
@@ -1250,6 +1387,7 @@
                 key,
                 JSON.stringify({
                     ...this.buildPayload(),
+                    settings: this.state.settings,
                     survey_id: this.state.surveyId,
                     share_url: this.state.shareUrl,
                     save_url: this.state.urls.save,
@@ -1297,19 +1435,71 @@
             this.saveStatus.textContent = text;
         }
 
-        notify(message, type) {
-            if (window.Swal) {
-                Swal.fire({
-                    toast: true,
-                    position: "top-end",
-                    timer: 2400,
-                    showConfirmButton: false,
-                    icon: type === "error" ? "error" : type === "success" ? "success" : "info",
-                    title: message,
-                });
+        ensureToastViewport() {
+            let viewport = document.getElementById("builderToastViewport");
+            if (viewport) {
+                return viewport;
+            }
+
+            viewport = document.createElement("div");
+            viewport.id = "builderToastViewport";
+            viewport.className = "builder-toast-viewport";
+            viewport.setAttribute("aria-live", "polite");
+            viewport.setAttribute("aria-atomic", "true");
+            document.body.appendChild(viewport);
+            return viewport;
+        }
+
+        dismissToast(toast) {
+            if (!toast) {
                 return;
             }
-            window.alert(message);
+
+            const timerId = this.toastTimerIds.get(toast);
+            if (timerId) {
+                window.clearTimeout(timerId);
+                this.toastTimerIds.delete(toast);
+            }
+
+            toast.classList.add("is-leaving");
+            window.setTimeout(() => {
+                toast.remove();
+            }, 220);
+        }
+
+        notify(message, type) {
+            const level = type === "error" ? "error" : type === "success" ? "success" : "info";
+            const iconClass = level === "error"
+                ? "bi-exclamation-octagon-fill"
+                : level === "success"
+                    ? "bi-check-circle-fill"
+                    : "bi-info-circle-fill";
+            const label = level.charAt(0).toUpperCase() + level.slice(1);
+
+            const toast = document.createElement("section");
+            toast.className = `builder-toast is-${level}`;
+            toast.setAttribute("role", level === "error" ? "alert" : "status");
+
+            toast.innerHTML = `
+                <div class="builder-toast-icon" aria-hidden="true">
+                    <i class="bi ${iconClass}"></i>
+                </div>
+                <div class="builder-toast-copy">
+                    <strong>${label}</strong>
+                    <p>${this.escapeHtml(message)}</p>
+                </div>
+                <button type="button" class="builder-toast-close" aria-label="Dismiss notification">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            `;
+
+            const closeButton = toast.querySelector(".builder-toast-close");
+            closeButton.addEventListener("click", () => this.dismissToast(toast));
+
+            this.toastViewport.prepend(toast);
+
+            const timerId = window.setTimeout(() => this.dismissToast(toast), 3200);
+            this.toastTimerIds.set(toast, timerId);
         }
 
         async postJson(url, payload) {

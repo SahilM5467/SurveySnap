@@ -63,7 +63,7 @@
         <div class="section-heading">
             <div>
                 <span class="eyebrow">Continue Building</span>
-                <h2>Recent Drafts</h2>
+                <h2>Drafts{% if draft_count %} ({{ draft_count }}){% endif %}</h2>
             </div>
             <a class="section-link" href="{% url 'my_surveys' %}">
                 <i class="bi bi-layout-text-window-reverse"></i>

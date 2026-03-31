@@ -1,7 +1,47 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="max-w-6xl mx-auto px-6 py-10">
+    <div class="mb-8">
+        <h1 class="text-3xl font-semibold text-slate-900">Respondent Dashboard</h1>
+        <p class="mt-2 text-slate-600">Track available surveys and your recent submissions in one place.</p>
+    </div>
 
-<h1> Respondent Dashboard </h1>
-{{ request.user.role }}
+    <div class="grid gap-5 md:grid-cols-2">
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p class="text-sm font-medium text-slate-500">Published Surveys</p>
+            <h2 class="mt-2 text-4xl font-semibold text-slate-900">{{ available_survey_count }}</h2>
+            <a href="{% url 'available_surveys' %}" class="mt-5 inline-flex rounded-2xl bg-blue-600 px-4 py-3 font-medium text-white transition hover:bg-blue-700">
+                Browse Surveys
+            </a>
+        </article>
 
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p class="text-sm font-medium text-slate-500">My Submitted Responses</p>
+            <h2 class="mt-2 text-4xl font-semibold text-slate-900">{{ response_count }}</h2>
+            <a href="{% url 'my_responses' %}" class="mt-5 inline-flex rounded-2xl bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-slate-800">
+                View Responses
+            </a>
+        </article>
+    </div>
+
+    <section class="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5 flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-slate-900">Recent Responses</h3>
+            <a href="{% url 'my_responses' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">See all</a>
+        </div>
+
+        <div class="grid gap-4">
+            {% for response in recent_responses %}
+                <div class="rounded-2xl bg-slate-50 px-4 py-4">
+                    <p class="font-medium text-slate-900">{{ response.survey.title }}</p>
+                    <p class="mt-1 text-sm text-slate-600">Submitted on {{ response.submitted_at|date:"M d, Y h:i A" }}</p>
+                </div>
+            {% empty %}
+                <div class="rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-slate-600">
+                    No responses submitted yet.
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
 {% endblock content %}

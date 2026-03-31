@@ -46,10 +46,11 @@
     </head>
 <body>
 
-    {% if not hide_navbar and show_home_navbar %}
+    {% if hide_navbar %}
+    {% elif show_home_navbar %}
         {% include "home_navbar.html" %}
 
-    {% elif not hide_navbar and request.user.is_authenticated %}
+    {% elif request.user.is_authenticated %}
 
         {% if request.user.role == "admin" %}
             {% include "survey/admin/admin_navbar.html" %}
@@ -79,13 +80,20 @@
 
     <script>
     document.addEventListener("DOMContentLoaded", function () {
-
         const logoutButtons = document.querySelectorAll(".logout-btn");
+        let skipAutoLogout = false;
+        const isAuthenticated = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
+        const AUTO_LOGOUT_URL = "{% url 'auto_logout' %}";
+        const TAB_ID_KEY = "surveysnap.active_tab_id";
+        const TAB_REGISTRY_KEY = "surveysnap.active_tabs";
+        const TAB_STALE_MS = 30000;
+        let heartbeatTimerId = null;
 
         logoutButtons.forEach(function(button) {
 
             button.addEventListener("click", function(event) {
                 event.preventDefault();
+                skipAutoLogout = true;
 
                 const logoutUrl = this.dataset.url;
 
@@ -109,6 +117,83 @@
             });
 
         });
+
+        if (isAuthenticated) {
+            const tabId = getOrCreateTabId();
+
+            registerActiveTab(tabId);
+            heartbeatTimerId = window.setInterval(function() {
+                registerActiveTab(tabId);
+            }, 10000);
+
+            document.addEventListener("click", function(event) {
+                if (event.target.closest("a[href]")) {
+                    skipAutoLogout = true;
+                }
+            });
+
+            document.addEventListener("submit", function() {
+                skipAutoLogout = true;
+            });
+
+            window.addEventListener("pagehide", function() {
+                window.clearInterval(heartbeatTimerId);
+
+                if (skipAutoLogout) {
+                    return;
+                }
+
+                const remainingTabs = unregisterActiveTab(tabId);
+                if (remainingTabs === 0) {
+                    navigator.sendBeacon(AUTO_LOGOUT_URL);
+                }
+            });
+        }
+
+        function getOrCreateTabId() {
+            let tabId = sessionStorage.getItem(TAB_ID_KEY);
+            if (!tabId) {
+                tabId = "tab-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+                sessionStorage.setItem(TAB_ID_KEY, tabId);
+            }
+            return tabId;
+        }
+
+        function readTabRegistry() {
+            try {
+                const registry = JSON.parse(localStorage.getItem(TAB_REGISTRY_KEY) || "{}");
+                return typeof registry === "object" && registry !== null ? registry : {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function pruneStaleTabs(registry) {
+            const now = Date.now();
+            Object.keys(registry).forEach(function(key) {
+                if (!registry[key] || now - registry[key] > TAB_STALE_MS) {
+                    delete registry[key];
+                }
+            });
+            return registry;
+        }
+
+        function writeTabRegistry(registry) {
+            localStorage.setItem(TAB_REGISTRY_KEY, JSON.stringify(registry));
+        }
+
+        function registerActiveTab(tabId) {
+            const registry = pruneStaleTabs(readTabRegistry());
+            registry[tabId] = Date.now();
+            writeTabRegistry(registry);
+        }
+
+        function unregisterActiveTab(tabId) {
+            const registry = pruneStaleTabs(readTabRegistry());
+            delete registry[tabId];
+            writeTabRegistry(registry);
+            return Object.keys(registry).length;
+        }
 
     });
     </script>

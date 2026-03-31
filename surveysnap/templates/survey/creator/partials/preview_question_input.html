@@ -1,0 +1,53 @@
+{% if question.question_type == "multiple_choice" %}
+    <div class="preview-option-list">
+        {% for option in question.options.all %}
+            <label class="preview-option is-choice">
+                <input type="radio" name="question_{{ question.id|default:question_number }}" value="{{ option.option_text }}" {% if question.is_required and not preview_mode %}required{% endif %}>
+                <span>{{ option.option_text }}</span>
+            </label>
+        {% endfor %}
+    </div>
+{% elif question.question_type == "checkboxes" %}
+    <div class="preview-option-list">
+        {% for option in question.options.all %}
+            <label class="preview-option is-choice">
+                <input type="checkbox" name="question_{{ question.id|default:question_number }}" value="{{ option.option_text }}">
+                <span>{{ option.option_text }}</span>
+            </label>
+        {% endfor %}
+    </div>
+{% elif question.question_type == "dropdown" %}
+    <div class="field-shell">
+        <select name="question_{{ question.id|default:question_number }}" {% if question.is_required and not preview_mode %}required{% endif %}>
+            <option value="">Select an option</option>
+            {% for option in question.options.all %}
+                <option value="{{ option.option_text }}">{{ option.option_text }}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% elif question.question_type == "paragraph" %}
+    <div class="field-shell">
+        <textarea rows="5" name="question_{{ question.id|default:question_number }}" placeholder="Type your answer here" {% if question.is_required and not preview_mode %}required{% endif %}></textarea>
+    </div>
+{% elif question.question_type == "date" %}
+    <div class="field-shell">
+        <input type="date" name="question_{{ question.id|default:question_number }}" {% if question.is_required and not preview_mode %}required{% endif %}>
+    </div>
+{% elif question.question_type == "rating" %}
+    <div class="preview-rating-input" role="radiogroup" aria-label="{{ question.question_text }}">
+        {% for star in "12345" %}
+            <label class="rating-choice">
+                <input type="radio" name="question_{{ question.id|default:question_number }}" value="{{ forloop.counter }}" {% if question.is_required and not preview_mode %}required{% endif %}>
+                <span>&#9733;</span>
+            </label>
+        {% endfor %}
+    </div>
+{% elif question.question_type == "file_upload" %}
+    <div class="field-shell field-shell-file">
+        <input type="file" name="question_{{ question.id|default:question_number }}" {% if question.is_required and not preview_mode %}required{% endif %}>
+    </div>
+{% else %}
+    <div class="field-shell">
+        <input type="text" name="question_{{ question.id|default:question_number }}" placeholder="Type your answer here" {% if question.is_required and not preview_mode %}required{% endif %}>
+    </div>
+{% endif %}

@@ -130,6 +130,7 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 AUTH_USER_MODEL = 'core.User'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 #mail config
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

@@ -146,6 +146,11 @@
                     </div>
 
                     <div class="question-list" id="questionList"></div>
+
+                    <div class="builder-submit-row">
+                        <button type="button" class="builder-clear-button">Clear Form</button>
+                        <button type="button" class="builder-submit-button">Submit</button>
+                    </div>
                 </section>
 
                 <section class="builder-stage custom-stage" id="customStage">
@@ -162,6 +167,11 @@
                             Drop a question here to build a custom layout.
                         </div>
                     </div>
+
+                    <div class="builder-submit-row">
+                        <button type="button" class="builder-clear-button">Clear Form</button>
+                        <button type="button" class="builder-submit-button">Submit</button>
+                    </div>
                 </section>
             </main>
 
@@ -172,6 +182,22 @@
                 </div>
 
                 <div class="settings-group">
+                    <div class="field">
+                        <span>Survey Access</span>
+                        <div class="appearance-selector" id="visibilitySelector">
+                            <button type="button" class="appearance-chip is-active" data-visibility="public">Public</button>
+                            <button type="button" class="appearance-chip" data-visibility="private">Private</button>
+                        </div>
+                    </div>
+
+                    <div class="field private-password-field" id="privatePasswordField" hidden>
+                        <span>Survey Password</span>
+                        <div class="password-input-shell">
+                            <input id="privatePasswordInput" type="password" placeholder="Set private survey password">
+                        </div>
+                        <small id="privatePasswordHelper">Anyone opening this private survey must login first, then enter this password.</small>
+                    </div>
+
                     <label class="field">
                         <span>Accent Color</span>
                         <input id="accentColorInput" type="color" value="#2563eb">
@@ -205,7 +231,7 @@
 
                 <div class="settings-group share-group">
                     <div class="share-row">
-                        <span>Share Link</span>
+                        <span>Survey Link</span>
                         <button type="button" class="text-button" id="copyShareButton">Copy</button>
                     </div>
                     <input id="shareUrlInput" type="text" readonly placeholder="Publish the survey to generate a shareable link">
@@ -233,11 +259,11 @@
                     <div class="share-highlight-card">
                         <div class="share-highlight-copy">
                             <h3>Ready to send</h3>
-                            <p id="shareHelperText">Publish your survey to unlock the public link, QR code, and social sharing options.</p>
+                            <p id="shareHelperText">Publish your survey to unlock the share link, QR code, and social sharing options.</p>
                         </div>
                         <div class="share-link-stack">
                             <label class="field share-modal-field">
-                                <span>Public link</span>
+                                <span>Survey link</span>
                                 <div class="share-link-row">
                                     <input id="shareModalUrlInput" type="text" readonly placeholder="Publish the survey to generate a shareable link">
                                     <button type="button" class="secondary-button" id="copyShareModalButton">
