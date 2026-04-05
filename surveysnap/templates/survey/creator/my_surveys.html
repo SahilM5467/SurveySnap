@@ -1,6 +1,612 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 
-<h1> My Surveys </h1>
+<style>
+    .my-surveys-page {
+        display: grid;
+        gap: 32px;
+        padding: 12px 0 36px;
+    }
+
+    .my-surveys-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 36px;
+        border-radius: 28px;
+        background:
+            radial-gradient(circle at top right, rgba(96, 165, 250, 0.35), transparent 24rem),
+            linear-gradient(135deg, #0f172a 0%, #1e3a8a 52%, #2563eb 100%);
+        color: #ffffff;
+        box-shadow: 0 24px 60px rgba(37, 99, 235, 0.18);
+    }
+
+    .my-surveys-hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -80px -100px auto;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        filter: blur(4px);
+    }
+
+    .hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+        gap: 28px;
+        align-items: end;
+    }
+
+    .eyebrow-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .my-surveys-hero h1 {
+        margin: 18px 0 14px;
+        font-size: clamp(2rem, 3vw, 3.3rem);
+        line-height: 1.05;
+        color: #ffffff;
+    }
+
+    .hero-copy p {
+        max-width: 720px;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 26px;
+    }
+
+    .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-width: 180px;
+        padding: 14px 18px;
+        border-radius: 16px;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .hero-btn-primary {
+        background: #ffffff;
+        color: var(--primary-dark);
+    }
+
+    .hero-btn-secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .hero-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .hero-panel {
+        display: grid;
+        gap: 16px;
+        padding: 22px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(10px);
+    }
+
+    .hero-panel h2 {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.92);
+    }
+
+    .hero-panel-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .hero-panel-stat {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(15, 23, 42, 0.18);
+    }
+
+    .hero-panel-stat span {
+        display: block;
+        font-size: 0.84rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .hero-panel-stat strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 1.7rem;
+        font-family: "Poppins", sans-serif;
+        color: #ffffff;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .kpi-card {
+        padding: 24px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-soft);
+    }
+
+    .kpi-card span {
+        font-size: 0.88rem;
+        color: var(--text-light);
+    }
+
+    .kpi-card strong {
+        display: block;
+        margin: 10px 0 8px;
+        font-size: 2rem;
+        line-height: 1;
+        font-family: "Poppins", sans-serif;
+        color: var(--text-dark);
+    }
+
+    .kpi-card p {
+        color: var(--text-light);
+        line-height: 1.6;
+        font-size: 0.92rem;
+    }
+
+    .surveys-section {
+        display: grid;
+        gap: 20px;
+    }
+
+    .section-top {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 18px;
+    }
+
+    .section-top h2 {
+        margin: 10px 0 6px;
+        font-size: 1.8rem;
+    }
+
+    .section-top p {
+        color: var(--text-light);
+        max-width: 720px;
+        line-height: 1.7;
+    }
+
+    .section-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        color: var(--primary-dark);
+        font-weight: 600;
+        box-shadow: var(--shadow-soft);
+    }
+
+    .survey-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 22px;
+    }
+
+    .survey-card {
+        display: grid;
+        gap: 18px;
+        padding: 26px;
+        border-radius: 24px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        border: 1px solid rgba(37, 99, 235, 0.08);
+        box-shadow: var(--shadow-soft);
+        transition: var(--transition);
+    }
+
+    .survey-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .survey-card-top,
+    .survey-card-bottom,
+    .survey-actions,
+    .survey-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .status-badge,
+    .meta-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .status-live {
+        background: rgba(34, 197, 94, 0.14);
+        color: #15803d;
+    }
+
+    .status-draft {
+        background: rgba(245, 158, 11, 0.16);
+        color: #b45309;
+    }
+
+    .meta-badge {
+        background: #eff6ff;
+        color: var(--primary-dark);
+    }
+
+    .survey-title {
+        font-size: 1.35rem;
+        line-height: 1.35;
+    }
+
+    .survey-description {
+        color: var(--text-light);
+        line-height: 1.75;
+        min-height: 84px;
+    }
+
+    .metric-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .metric-box {
+        padding: 16px;
+        border-radius: 18px;
+        background: #f8fbff;
+        border: 1px solid rgba(37, 99, 235, 0.08);
+    }
+
+    .metric-box span {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-light);
+    }
+
+    .metric-box strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 1.3rem;
+        font-family: "Poppins", sans-serif;
+        color: var(--text-dark);
+    }
+
+    .survey-card-bottom {
+        padding-top: 2px;
+        border-top: 1px solid rgba(229, 231, 235, 0.9);
+    }
+
+    .survey-date {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 14px;
+        border-radius: 14px;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .action-link-primary {
+        background: var(--primary);
+        color: #ffffff;
+    }
+
+    .action-link-soft {
+        background: #eff6ff;
+        color: var(--primary-dark);
+    }
+
+    .action-link-muted {
+        background: #f8fafc;
+        color: var(--text-dark);
+        border: 1px solid var(--border);
+    }
+
+    .action-link:hover {
+        transform: translateY(-2px);
+    }
+
+    .empty-state {
+        display: grid;
+        justify-items: center;
+        gap: 16px;
+        padding: 56px 28px;
+        text-align: center;
+        border-radius: 28px;
+        background:
+            radial-gradient(circle at top, rgba(37, 99, 235, 0.12), transparent 20rem),
+            linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        box-shadow: var(--shadow-soft);
+    }
+
+    .empty-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 72px;
+        height: 72px;
+        border-radius: 24px;
+        background: var(--primary-light);
+        color: var(--primary-dark);
+    }
+
+    .empty-state h3 {
+        font-size: 1.6rem;
+    }
+
+    .empty-state p {
+        max-width: 620px;
+        color: var(--text-light);
+        line-height: 1.75;
+    }
+
+    @media (max-width: 1100px) {
+        .hero-grid,
+        .kpi-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .my-surveys-hero,
+        .kpi-card,
+        .survey-card {
+            padding: 22px;
+        }
+
+        .hero-grid,
+        .kpi-grid,
+        .hero-panel-grid,
+        .metric-row {
+            grid-template-columns: 1fr;
+        }
+
+        .section-top {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .hero-actions,
+        .survey-actions {
+            width: 100%;
+        }
+
+        .hero-btn,
+        .action-link {
+            width: 100%;
+        }
+    }
+</style>
+
+<section class="my-surveys-page fade-in">
+    <div class="my-surveys-hero">
+        <div class="hero-grid">
+            <div class="hero-copy">
+                <span class="eyebrow-badge">
+                    <i data-lucide="layout-dashboard"></i>
+                    Survey Creator Workspace
+                </span>
+                <h1>Manage every survey from one polished command center.</h1>
+                <p>
+                    Track drafts, monitor live forms, and jump back into editing in seconds.
+                    This view keeps your SurveySnap creator workflow organized, fast, and client-ready.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="{% url 'create_survey_page' %}" class="hero-btn hero-btn-primary">
+                        <i data-lucide="plus"></i>
+                        Create New Survey
+                    </a>
+                    <a href="{% url 'analytics' %}" class="hero-btn hero-btn-secondary">
+                        <i data-lucide="bar-chart-3"></i>
+                        Open Analytics
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-panel">
+                <h2>Workspace Snapshot</h2>
+                <div class="hero-panel-grid">
+                    <div class="hero-panel-stat">
+                        <span>Total surveys</span>
+                        <strong>{{ survey_count }}</strong>
+                    </div>
+                    <div class="hero-panel-stat">
+                        <span>Published</span>
+                        <strong>{{ published_count }}</strong>
+                    </div>
+                    <div class="hero-panel-stat">
+                        <span>Drafts</span>
+                        <strong>{{ draft_count }}</strong>
+                    </div>
+                    <div class="hero-panel-stat">
+                        <span>Responses</span>
+                        <strong>{{ response_total }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="kpi-grid">
+        <article class="kpi-card">
+            <span>Survey portfolio</span>
+            <strong>{{ survey_count }}</strong>
+            <p>Your full collection of surveys, from early drafts to active live forms.</p>
+        </article>
+        <article class="kpi-card">
+            <span>Live collection</span>
+            <strong>{{ published_count }}</strong>
+            <p>Published surveys currently ready to collect feedback and responses.</p>
+        </article>
+        <article class="kpi-card">
+            <span>Private surveys</span>
+            <strong>{{ private_count }}</strong>
+            <p>Restricted surveys configured for controlled distribution and secure access.</p>
+        </article>
+        <article class="kpi-card">
+            <span>Total responses</span>
+            <strong>{{ response_total }}</strong>
+            <p>All submissions received across your creator workspace so far.</p>
+        </article>
+    </section>
+
+    <section class="surveys-section">
+        <div class="section-top">
+            <div>
+                <span class="eyebrow-badge" style="background: var(--primary-light); color: var(--primary-dark);">
+                    <i data-lucide="clipboard-list"></i>
+                    Survey Library
+                </span>
+                <h2>My Surveys</h2>
+                <p>
+                    Review progress, open the builder, preview the participant experience,
+                    and share live surveys with confidence.
+                </p>
+            </div>
+            <div class="section-chip">
+                <i data-lucide="sparkles"></i>
+                {{ survey_count }} survey{{ survey_count|pluralize }}
+            </div>
+        </div>
+
+        {% if surveys %}
+            <div class="survey-grid">
+                {% for survey in surveys %}
+                    <article class="survey-card">
+                        <div class="survey-card-top">
+                            <span class="status-badge {% if survey.is_published %}status-live{% else %}status-draft{% endif %}">
+                                <i data-lucide="{% if survey.is_published %}radio{% else %}clipboard-list{% endif %}"></i>
+                                {% if survey.is_published %}Published{% else %}Draft{% endif %}
+                            </span>
+                            <div class="survey-meta">
+                                <span class="meta-badge">
+                                    <i data-lucide="{% if survey.visibility == 'private' %}lock{% else %}globe{% endif %}"></i>
+                                    {{ survey.visibility|title }}
+                                </span>
+                                <span class="meta-badge">
+                                    <i data-lucide="target"></i>
+                                    {{ survey.get_survey_type_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="survey-title">{{ survey.title }}</h3>
+                        </div>
+
+                        <p class="survey-description">
+                            {% if survey.description %}
+                                {{ survey.description|truncatechars:160 }}
+                            {% else %}
+                                This survey is ready for structure, branding, and response collection. Open it to keep building your next polished feedback experience.
+                            {% endif %}
+                        </p>
+
+                        <div class="metric-row">
+                            <div class="metric-box">
+                                <span>Questions</span>
+                                <strong>{{ survey.question_count }}</strong>
+                            </div>
+                            <div class="metric-box">
+                                <span>Responses</span>
+                                <strong>{{ survey.response_count }}</strong>
+                            </div>
+                            <div class="metric-box">
+                                <span>Status</span>
+                                <strong>{% if survey.is_published %}Live{% else %}Draft{% endif %}</strong>
+                            </div>
+                        </div>
+
+                        <div class="survey-card-bottom">
+                            <span class="survey-date">
+                                <i data-lucide="clock-3"></i>
+                                Updated {{ survey.updated_at|timesince }} ago
+                            </span>
+
+                            <div class="survey-actions">
+                                <a href="{% url 'survey_builder_edit' survey.id %}" class="action-link action-link-primary" target="_blank" rel="noopener noreferrer">
+                                    <i data-lucide="square-pen"></i>
+                                    Edit
+                                </a>
+                                <a href="{% url 'survey_preview' survey.id %}" class="action-link action-link-soft" target="_blank" rel="noopener noreferrer">
+                                    <i data-lucide="eye"></i>
+                                    Preview
+                                </a>
+                                {% if survey.is_published %}
+                                    <a href="{% url 'public_survey_detail' survey.share_token %}" class="action-link action-link-muted" target="_blank" rel="noopener noreferrer">
+                                        <i data-lucide="send"></i>
+                                        Open Live
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i data-lucide="lightbulb"></i>
+                </div>
+                <h3>Your survey library is ready for its first launch.</h3>
+                <p>
+                    Start with a new survey and build a professional form experience using your existing SurveySnap creator tools.
+                </p>
+                <a href="{% url 'create_survey_page' %}" class="hero-btn hero-btn-primary">
+                    <i data-lucide="plus"></i>
+                    Create Your First Survey
+                </a>
+            </div>
+        {% endif %}
+    </section>
+</section>
 
 {% endblock content %}

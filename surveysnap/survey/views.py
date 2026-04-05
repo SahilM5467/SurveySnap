@@ -1,4 +1,5 @@
 import json
+from collections import Counter, defaultdict
 from io import BytesIO
 from urllib.parse import urlencode
 
@@ -13,6 +14,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_POST
 
+from core.forms import RespondentProfileForm
 from core.models import User
 
 from .decorators import role_required
@@ -453,6 +455,21 @@ def _get_user_display_name(user):
     return full_name or getattr(user, "email", "") or f"User {user.pk}"
 
 
+def _response_answer_items(response):
+    if not isinstance(response.answers, dict):
+        return []
+    return response.answers.get("answers", []) or []
+
+
+def _response_answer_lookup(response):
+    answer_lookup = {}
+    for answer in _response_answer_items(response):
+        question_id = answer.get("question_id")
+        if question_id is not None:
+            answer_lookup[question_id] = answer
+    return answer_lookup
+
+
 @transaction.atomic
 def _persist_survey_payload(request, survey, payload, publish=False, force_publish_state=None):
     validated = _validate_payload(payload, for_publish=publish)
@@ -735,7 +752,52 @@ def ReportsView(request):
 
 @role_required(allowed_roles=["creator"])
 def CreatorDashboardView(request):
-    return render(request, "survey/creator/creator_dashboard.html")
+    surveys = list(
+        Survey.objects.filter(created_by=request.user)
+        .annotate(
+            question_count=Count("questions", distinct=True),
+            response_count=Count("responses", distinct=True),
+        )
+        .order_by("-updated_at")
+    )
+    recent_surveys = surveys[:4]
+    live_surveys = [survey for survey in surveys if survey.is_published][:4]
+    draft_surveys = [survey for survey in surveys if not survey.is_published][:4]
+    total_responses = sum(survey.response_count for survey in surveys)
+    published_count = sum(1 for survey in surveys if survey.is_published)
+    draft_count = len(surveys) - published_count
+    private_count = sum(1 for survey in surveys if survey.visibility == "private")
+    average_responses = round(total_responses / len(surveys), 1) if surveys else 0
+
+    recent_responses = []
+    response_queryset = (
+        Response.objects.filter(survey__created_by=request.user)
+        .select_related("survey", "user")
+        .order_by("-submitted_at")[:6]
+    )
+    for response in response_queryset:
+        recent_responses.append(
+            {
+                "survey_title": response.survey.title,
+                "respondent_name": _get_user_display_name(response.user) if response.user else "Anonymous respondent",
+                "submitted_at": response.submitted_at,
+                "answer_count": len(_response_answer_items(response)),
+            }
+        )
+
+    context = {
+        "survey_count": len(surveys),
+        "published_count": published_count,
+        "draft_count": draft_count,
+        "private_count": private_count,
+        "total_responses": total_responses,
+        "average_responses": average_responses,
+        "recent_surveys": recent_surveys,
+        "live_surveys": live_surveys,
+        "draft_surveys": draft_surveys,
+        "recent_responses": recent_responses,
+    }
+    return render(request, "survey/creator/creator_dashboard.html", context)
 
 
 @role_required(allowed_roles=["creator"])
@@ -1001,13 +1063,228 @@ def public_survey_detail(request, share_token):
 
 @role_required(allowed_roles=["creator"])
 def MySurveysView(request):
-    surveys = Survey.objects.filter(created_by=request.user).order_by("-updated_at")
-    return render(request, "survey/creator/my_surveys.html", {"surveys": surveys})
+    surveys = (
+        Survey.objects.filter(created_by=request.user)
+        .annotate(
+            question_count=Count("questions", distinct=True),
+            response_count=Count("responses", distinct=True),
+        )
+        .order_by("-updated_at")
+    )
+    context = {
+        "surveys": surveys,
+        "survey_count": surveys.count(),
+        "published_count": surveys.filter(is_published=True).count(),
+        "draft_count": surveys.filter(is_published=False).count(),
+        "private_count": surveys.filter(visibility="private").count(),
+        "response_total": sum(survey.response_count for survey in surveys),
+    }
+    return render(request, "survey/creator/my_surveys.html", context)
 
 
 @role_required(allowed_roles=["creator"])
 def AnalyticsView(request):
-    return render(request, "survey/creator/analytics.html")
+    surveys = list(
+        Survey.objects.filter(created_by=request.user)
+        .annotate(
+            question_count=Count("questions", distinct=True),
+            response_count=Count("responses", distinct=True),
+        )
+        .prefetch_related(
+            Prefetch("questions", queryset=Question.objects.prefetch_related("options")),
+            "responses",
+        )
+        .order_by("-updated_at")
+    )
+
+    survey_map = {survey.id: survey for survey in surveys}
+    selected_survey = None
+    selected_survey_id = request.GET.get("survey")
+    if selected_survey_id and selected_survey_id.isdigit():
+        selected_survey = survey_map.get(int(selected_survey_id))
+    if selected_survey is None and surveys:
+        selected_survey = surveys[0]
+
+    total_surveys = len(surveys)
+    total_responses = sum(survey.response_count for survey in surveys)
+    published_count = sum(1 for survey in surveys if survey.is_published)
+    draft_count = total_surveys - published_count
+    private_count = sum(1 for survey in surveys if survey.visibility == "private")
+    public_count = total_surveys - private_count
+    average_responses = round(total_responses / total_surveys, 1) if total_surveys else 0
+
+    top_surveys = sorted(surveys, key=lambda survey: (-survey.response_count, survey.title.lower()))[:5]
+
+    response_trend_counter = defaultdict(int)
+    all_recent_responses = []
+    for survey in surveys:
+        survey_recent_responses = list(survey.responses.all())
+        all_recent_responses.extend(survey_recent_responses)
+        for response in survey_recent_responses:
+            response_trend_counter[response.submitted_at.date()] += 1
+
+    all_recent_responses.sort(key=lambda response: response.submitted_at, reverse=True)
+    recent_responses = []
+    for response in all_recent_responses[:6]:
+        recent_responses.append(
+            {
+                "survey_title": response.survey.title,
+                "respondent_name": (
+                    _get_user_display_name(response.user)
+                    if response.user
+                    else "Anonymous respondent"
+                ),
+                "submitted_at": response.submitted_at,
+                "answer_count": len(_response_answer_items(response)),
+            }
+        )
+
+    selected_questions = []
+    selected_summary = None
+    selected_response_trend_labels = []
+    selected_response_trend_values = []
+    completion_rate = 0
+
+    if selected_survey:
+        selected_responses = list(selected_survey.responses.all())
+        selected_questions_queryset = list(selected_survey.questions.all())
+        selected_answer_maps = [_response_answer_lookup(response) for response in selected_responses]
+
+        selected_trend_counter = defaultdict(int)
+        for response in selected_responses:
+            selected_trend_counter[response.submitted_at.date()] += 1
+        selected_response_trend_items = sorted(selected_trend_counter.items())
+        selected_response_trend_labels = [date.strftime("%d %b") for date, _ in selected_response_trend_items]
+        selected_response_trend_values = [value for _, value in selected_response_trend_items]
+
+        total_required_answers = sum(1 for question in selected_questions_queryset if question.is_required) * len(selected_responses)
+        completed_required_answers = 0
+
+        for question in selected_questions_queryset:
+            option_labels = [option.option_text for option in question.options.all()]
+            answer_values = []
+            answer_total = 0
+
+            for answer_map in selected_answer_maps:
+                answer = answer_map.get(question.id)
+                if not answer:
+                    continue
+
+                raw_value = answer.get("value")
+                if raw_value in ("", [], {}, None):
+                    continue
+
+                answer_total += 1
+                answer_values.append(raw_value)
+                if question.is_required:
+                    completed_required_answers += 1
+
+            question_data = {
+                "question_text": question.question_text,
+                "question_type": question.get_question_type_display(),
+                "is_required": question.is_required,
+                "answer_total": answer_total,
+                "response_rate": round((answer_total / len(selected_responses)) * 100, 1) if selected_responses else 0,
+                "visual_type": "samples",
+                "segments": [],
+                "sample_answers": [],
+                "average_rating": None,
+            }
+
+            if question.question_type in {"multiple_choice", "dropdown"}:
+                counts = Counter(value for value in answer_values if isinstance(value, str))
+                question_data["visual_type"] = "distribution"
+                question_data["segments"] = [
+                    {
+                        "label": label,
+                        "count": counts.get(label, 0),
+                        "width": round((counts.get(label, 0) / answer_total) * 100, 1) if answer_total else 0,
+                    }
+                    for label in option_labels
+                ]
+            elif question.question_type == "checkboxes":
+                counts = Counter()
+                for value in answer_values:
+                    if isinstance(value, list):
+                        counts.update(value)
+                question_data["visual_type"] = "distribution"
+                question_data["segments"] = [
+                    {
+                        "label": label,
+                        "count": counts.get(label, 0),
+                        "width": round((counts.get(label, 0) / answer_total) * 100, 1) if answer_total else 0,
+                    }
+                    for label in option_labels
+                ]
+            elif question.question_type == "rating":
+                rating_max = int((question.settings or {}).get("rating_max") or 5)
+                counts = Counter(int(value) for value in answer_values if isinstance(value, int))
+                question_data["visual_type"] = "distribution"
+                question_data["segments"] = [
+                    {
+                        "label": f"{rating} star",
+                        "count": counts.get(rating, 0),
+                        "width": round((counts.get(rating, 0) / answer_total) * 100, 1) if answer_total else 0,
+                    }
+                    for rating in range(1, rating_max + 1)
+                ]
+                question_data["average_rating"] = round(
+                    sum(int(value) for value in answer_values if isinstance(value, int)) / answer_total,
+                    1,
+                ) if answer_total else None
+            else:
+                formatted_samples = []
+                for value in answer_values[:4]:
+                    formatted_samples.append(_format_answer_value(value))
+                question_data["sample_answers"] = formatted_samples
+
+            selected_questions.append(question_data)
+
+        completion_rate = round(
+            (completed_required_answers / total_required_answers) * 100,
+            1,
+        ) if total_required_answers else 100
+
+        selected_summary = {
+            "id": selected_survey.id,
+            "title": selected_survey.title,
+            "description": selected_survey.description,
+            "is_published": selected_survey.is_published,
+            "visibility": selected_survey.visibility,
+            "survey_type": selected_survey.get_survey_type_display(),
+            "question_count": selected_survey.question_count,
+            "response_count": selected_survey.response_count,
+            "completion_rate": completion_rate,
+            "updated_at": selected_survey.updated_at,
+            "share_url": selected_survey.share_url,
+        }
+
+    chart_data = {
+        "surveyLabels": [survey.title for survey in top_surveys],
+        "surveyResponses": [survey.response_count for survey in top_surveys],
+        "visibilityLabels": ["Public", "Private"],
+        "visibilityValues": [public_count, private_count],
+        "responseTrendLabels": [date.strftime("%d %b") for date, _ in sorted(response_trend_counter.items())][-8:],
+        "responseTrendValues": [value for _, value in sorted(response_trend_counter.items())][-8:],
+        "selectedTrendLabels": selected_response_trend_labels[-8:],
+        "selectedTrendValues": selected_response_trend_values[-8:],
+    }
+
+    context = {
+        "surveys": surveys,
+        "selected_survey": selected_summary,
+        "selected_questions": selected_questions,
+        "survey_count": total_surveys,
+        "published_count": published_count,
+        "draft_count": draft_count,
+        "private_count": private_count,
+        "total_responses": total_responses,
+        "average_responses": average_responses,
+        "top_surveys": top_surveys,
+        "recent_responses": recent_responses,
+        "chart_data": chart_data,
+    }
+    return render(request, "survey/creator/analytics.html", context)
 
 
 # ===========================================================
@@ -1047,4 +1324,16 @@ def MyResponsesView(request):
 
 @role_required(allowed_roles=["respondent"])
 def ProfileView(request):
-    return render(request, "survey/respondent/profile.html")
+    if request.method == "POST":
+        form = RespondentProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            updated_user = form.save(commit=False)
+            updated_user.email = request.user.email
+            updated_user.role = request.user.role
+            updated_user.save(update_fields=["first_name", "last_name", "gender", "phone_no", "updated_at"])
+            messages.success(request, "Profile updated successfully.")
+            return redirect("profile")
+    else:
+        form = RespondentProfileForm(instance=request.user)
+
+    return render(request, "survey/respondent/profile.html", {"form": form})

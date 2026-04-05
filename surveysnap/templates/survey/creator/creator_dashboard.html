@@ -1,7 +1,279 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1> Survey Creator Dashboard </h1>
-{{ request.user.role }}
+<style>
+    .creator-dashboard{display:grid;gap:24px;padding:12px 0 36px}
+    .dash-hero,.dash-card,.metric-card,.survey-card,.activity-card,.empty-card{background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow-soft)}
+    .dash-hero{padding:36px;position:relative;overflow:hidden;background:radial-gradient(circle at top right,rgba(147,197,253,.34),transparent 22rem),linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);color:#fff}
+    .dash-hero::after{content:"";position:absolute;right:-70px;bottom:-90px;width:230px;height:230px;border-radius:50%;background:rgba(255,255,255,.08)}
+    .hero-grid,.action-grid,.metric-grid,.content-grid,.survey-grid{display:grid;gap:18px}
+    .hero-grid{grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);align-items:end}
+    .eyebrow,.hero-link,.action-card,.status-chip,.meta-chip,.mini-chip{display:inline-flex;align-items:center;gap:8px}
+    .eyebrow{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.12);font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+    .dash-hero h1{margin:18px 0 12px;font-size:clamp(2rem,3vw,3.2rem);line-height:1.05;color:#fff}
+    .dash-hero p{max-width:760px;color:rgba(255,255,255,.84);line-height:1.8}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+    .hero-link{justify-content:center;padding:13px 18px;border-radius:16px;font-weight:600;transition:var(--transition)}
+    .hero-link.primary{background:#fff;color:var(--primary-dark)}
+    .hero-link.secondary{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.16)}
+    .hero-link:hover,.action-card:hover,.survey-card:hover{transform:translateY(-2px)}
+    .hero-panel{padding:22px;border-radius:24px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(12px)}
+    .hero-panel h2{font-size:1rem;color:rgba(255,255,255,.92)}
+    .hero-panel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+    .hero-panel-item{padding:14px;border-radius:18px;background:rgba(15,23,42,.18)}
+    .hero-panel-item span{display:block;color:rgba(255,255,255,.7);font-size:.84rem}
+    .hero-panel-item strong{display:block;margin-top:8px;font:600 1.55rem "Poppins",sans-serif;color:#fff}
+    .action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .action-card{padding:24px;border-radius:24px;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);border:1px solid rgba(37,99,235,.1);box-shadow:var(--shadow-soft);text-decoration:none;color:inherit;min-height:180px;display:grid;gap:14px;transition:var(--transition)}
+    .action-card.primary{background:linear-gradient(145deg,#1e40af 0%,#2563eb 58%,#60a5fa 100%);color:#fff;border-color:rgba(255,255,255,.08)}
+    .action-icon{width:56px;height:56px;border-radius:18px;display:inline-flex;align-items:center;justify-content:center;background:var(--primary-light);color:var(--primary-dark)}
+    .action-card.primary .action-icon{background:rgba(255,255,255,.16);color:#fff}
+    .action-card h3{font-size:1.3rem;line-height:1.25}
+    .action-card p{line-height:1.7;color:var(--text-light)}
+    .action-card.primary p{color:rgba(255,255,255,.82)}
+    .metric-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .metric-card,.dash-card,.activity-card,.empty-card,.survey-card{padding:24px}
+    .metric-card span,.muted{color:var(--text-light);font-size:.88rem}
+    .metric-card strong{display:block;margin:10px 0 8px;font:600 2rem "Poppins",sans-serif;color:var(--text-dark);line-height:1}
+    .metric-card p{color:var(--text-light);line-height:1.65;font-size:.92rem}
+    .content-grid{grid-template-columns:1.15fr .85fr}
+    .section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+    .section-head p{margin-top:8px;color:var(--text-light);line-height:1.7}
+    .mini-chip{padding:9px 12px;border-radius:999px;background:#eff6ff;color:var(--primary-dark);font-weight:600}
+    .survey-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+    .survey-card{display:grid;gap:16px;transition:var(--transition)}
+    .status-row,.meta-row,.survey-actions,.activity-item{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .status-chip,.meta-chip{padding:8px 12px;border-radius:999px;font-size:.8rem;font-weight:600}
+    .status-chip.live{background:rgba(34,197,94,.14);color:#15803d}
+    .status-chip.draft{background:rgba(245,158,11,.16);color:#b45309}
+    .meta-chip{background:#eff6ff;color:var(--primary-dark)}
+    .survey-card h3{font-size:1.2rem;line-height:1.35}
+    .survey-card p{color:var(--text-light);line-height:1.7}
+    .survey-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .survey-stat{padding:14px;border-radius:16px;background:#f8fbff;border:1px solid rgba(37,99,235,.08)}
+    .survey-stat span{display:block;font-size:.8rem;color:var(--text-light)}
+    .survey-stat strong{display:block;margin-top:8px;font:600 1.2rem "Poppins",sans-serif;color:var(--text-dark)}
+    .action-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border-radius:14px;font-weight:600;transition:var(--transition)}
+    .action-link.primary{background:var(--primary);color:#fff}
+    .action-link.soft{background:#eff6ff;color:var(--primary-dark)}
+    .list{display:grid;gap:12px}
+    .activity-item{padding:16px;border-radius:18px;background:#f8fbff;border:1px solid rgba(37,99,235,.08)}
+    .activity-item strong{display:block;font-size:.96rem}
+    .activity-item span{display:block;margin-top:4px;color:var(--text-light);font-size:.85rem}
+    .activity-value{font:600 1.15rem "Poppins",sans-serif;color:var(--primary-dark)}
+    .empty-card{text-align:center;justify-items:center;display:grid;gap:14px;background:radial-gradient(circle at top,rgba(37,99,235,.12),transparent 20rem),linear-gradient(180deg,#fff 0%,#f8fbff 100%)}
+    .empty-icon{width:72px;height:72px;border-radius:24px;display:inline-flex;align-items:center;justify-content:center;background:var(--primary-light);color:var(--primary-dark)}
+    .empty-card p{max-width:520px;color:var(--text-light);line-height:1.75}
+    @media (max-width:1100px){.hero-grid,.metric-grid,.content-grid{grid-template-columns:1fr 1fr}.action-grid{grid-template-columns:1fr}}
+    @media (max-width:768px){.dash-hero,.dash-card,.metric-card,.survey-card,.activity-card,.empty-card{padding:22px}.hero-grid,.metric-grid,.content-grid,.hero-panel-grid,.survey-stats{grid-template-columns:1fr}.hero-actions,.survey-actions{width:100%}.hero-link,.action-link{width:100%;justify-content:center}}
+</style>
+
+<section class="creator-dashboard fade-in">
+    <div class="dash-hero">
+        <div class="hero-grid">
+            <div>
+                <span class="eyebrow"><i data-lucide="layout-dashboard"></i> Creator Workspace</span>
+                <h1>Build, launch, and grow every survey from one polished dashboard.</h1>
+                <p>Stay on top of your drafts, live forms, and incoming responses with a creator home designed to feel fast, professional, and client-ready inside the SurveySnap theme.</p>
+                <div class="hero-actions">
+                    <a href="{% url 'create_survey_page' %}" class="hero-link primary"><i data-lucide="plus"></i>Create New Survey</a>
+                    <a href="{% url 'analytics' %}" class="hero-link secondary"><i data-lucide="bar-chart-3"></i>Open Analytics</a>
+                </div>
+            </div>
+            <div class="hero-panel">
+                <h2>Workspace Snapshot</h2>
+                <div class="hero-panel-grid">
+                    <div class="hero-panel-item"><span>Total surveys</span><strong>{{ survey_count }}</strong></div>
+                    <div class="hero-panel-item"><span>Live now</span><strong>{{ published_count }}</strong></div>
+                    <div class="hero-panel-item"><span>Drafts</span><strong>{{ draft_count }}</strong></div>
+                    <div class="hero-panel-item"><span>Responses</span><strong>{{ total_responses }}</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="action-grid">
+        <a href="{% url 'create_survey_page' %}" class="action-card primary">
+            <span class="action-icon"><i data-lucide="square-pen"></i></span>
+            <h3>Create your next survey</h3>
+            <p>Start a fresh survey flow and move directly into the creator experience with the same polished product theme.</p>
+            <span>Open creator tools</span>
+        </a>
+        <a href="{% url 'my_surveys' %}" class="action-card">
+            <span class="action-icon"><i data-lucide="clipboard-list"></i></span>
+            <h3>Manage my surveys</h3>
+            <p>Review drafts, open live forms, and jump back into editing without losing momentum.</p>
+            <span>Review survey library</span>
+        </a>
+        <a href="{% url 'analytics' %}" class="action-card">
+            <span class="action-icon"><i data-lucide="chart-column"></i></span>
+            <h3>Explore analytics</h3>
+            <p>Analyze response volume, compare performance, and inspect question-level survey behavior.</p>
+            <span>Open insight workspace</span>
+        </a>
+    </section>
+
+    <section class="metric-grid">
+        <article class="metric-card">
+            <span>Survey portfolio</span>
+            <strong>{{ survey_count }}</strong>
+            <p>Your complete creator collection across draft, live, public, and private forms.</p>
+        </article>
+        <article class="metric-card">
+            <span>Published surveys</span>
+            <strong>{{ published_count }}</strong>
+            <p>Surveys currently live and ready to collect responses from your audience.</p>
+        </article>
+        <article class="metric-card">
+            <span>Private surveys</span>
+            <strong>{{ private_count }}</strong>
+            <p>Restricted surveys prepared for secure sharing and controlled access.</p>
+        </article>
+        <article class="metric-card">
+            <span>Average responses</span>
+            <strong>{{ average_responses }}</strong>
+            <p>Average submission volume per survey across your current creator workspace.</p>
+        </article>
+    </section>
+
+    {% if survey_count %}
+        <section class="content-grid">
+            <div class="dash-card">
+                <div class="section-head">
+                    <div>
+                        <h2>Recent Surveys</h2>
+                        <p>Your latest creator activity, ready to reopen, preview, or continue editing.</p>
+                    </div>
+                    <a href="{% url 'my_surveys' %}" class="mini-chip"><i data-lucide="arrow-right"></i>View All</a>
+                </div>
+                <div class="survey-grid">
+                    {% for survey in recent_surveys %}
+                        <article class="survey-card">
+                            <div class="status-row">
+                                <span class="status-chip {% if survey.is_published %}live{% else %}draft{% endif %}">
+                                    <i data-lucide="{% if survey.is_published %}radio{% else %}file-text{% endif %}"></i>
+                                    {% if survey.is_published %}Published{% else %}Draft{% endif %}
+                                </span>
+                                <span class="meta-chip">
+                                    <i data-lucide="{% if survey.visibility == 'private' %}lock{% else %}globe{% endif %}"></i>
+                                    {{ survey.visibility|title }}
+                                </span>
+                            </div>
+                            <div>
+                                <h3>{{ survey.title }}</h3>
+                                <p>{% if survey.description %}{{ survey.description|truncatechars:140 }}{% else %}This survey is ready for continued editing, preview, publishing, and response collection from your creator workspace.{% endif %}</p>
+                            </div>
+                            <div class="survey-stats">
+                                <div class="survey-stat"><span>Questions</span><strong>{{ survey.question_count }}</strong></div>
+                                <div class="survey-stat"><span>Responses</span><strong>{{ survey.response_count }}</strong></div>
+                                <div class="survey-stat"><span>Updated</span><strong>{{ survey.updated_at|timesince }}</strong></div>
+                            </div>
+                            <div class="survey-actions">
+                                <a href="{% url 'survey_builder_edit' survey.id %}" class="action-link primary" target="_blank" rel="noopener noreferrer"><i data-lucide="square-pen"></i>Edit</a>
+                                <a href="{% url 'survey_preview' survey.id %}" class="action-link soft" target="_blank" rel="noopener noreferrer"><i data-lucide="eye"></i>Preview</a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="activity-card">
+                <div class="section-head">
+                    <div>
+                        <h2>Recent Responses</h2>
+                        <p>The newest response activity across your surveys.</p>
+                    </div>
+                </div>
+                <div class="list">
+                    {% for item in recent_responses %}
+                        <div class="activity-item">
+                            <div>
+                                <strong>{{ item.survey_title }}</strong>
+                                <span>{{ item.respondent_name }} • {{ item.answer_count }} answer{{ item.answer_count|pluralize }}</span>
+                            </div>
+                            <div class="activity-value">{{ item.submitted_at|timesince }}</div>
+                        </div>
+                    {% empty %}
+                        <div class="activity-item">
+                            <div>
+                                <strong>No responses yet</strong>
+                                <span>New submissions will appear here once your audience starts responding.</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="content-grid">
+            <div class="dash-card">
+                <div class="section-head">
+                    <div>
+                        <h2>Live Surveys</h2>
+                        <p>Forms currently active and ready for participants right now.</p>
+                    </div>
+                    <span class="mini-chip"><i data-lucide="radio"></i>{{ published_count }} live</span>
+                </div>
+                <div class="list">
+                    {% for survey in live_surveys %}
+                        <div class="activity-item">
+                            <div>
+                                <strong>{{ survey.title }}</strong>
+                                <span>{{ survey.response_count }} response{{ survey.response_count|pluralize }} • {{ survey.question_count }} question{{ survey.question_count|pluralize }}</span>
+                            </div>
+                            <div class="survey-actions">
+                                <a href="{% url 'public_survey_detail' survey.share_token %}" class="action-link soft" target="_blank" rel="noopener noreferrer"><i data-lucide="send"></i>Open Live</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="activity-item">
+                            <div>
+                                <strong>No live surveys yet</strong>
+                                <span>Publish one of your drafts to start collecting real responses.</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="dash-card">
+                <div class="section-head">
+                    <div>
+                        <h2>Draft Queue</h2>
+                        <p>Surveys that still need editing, preview, or publishing.</p>
+                    </div>
+                    <span class="mini-chip"><i data-lucide="file-text"></i>{{ draft_count }} drafts</span>
+                </div>
+                <div class="list">
+                    {% for survey in draft_surveys %}
+                        <div class="activity-item">
+                            <div>
+                                <strong>{{ survey.title }}</strong>
+                                <span>Updated {{ survey.updated_at|timesince }} ago • {{ survey.question_count }} question{{ survey.question_count|pluralize }}</span>
+                            </div>
+                            <div class="survey-actions">
+                                <a href="{% url 'survey_builder_edit' survey.id %}" class="action-link primary" target="_blank" rel="noopener noreferrer"><i data-lucide="square-pen"></i>Continue</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="activity-item">
+                            <div>
+                                <strong>No drafts waiting</strong>
+                                <span>Your creator workspace is clear right now.</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% else %}
+        <div class="empty-card">
+            <div class="empty-icon"><i data-lucide="sparkles"></i></div>
+            <h2>Your creator dashboard is ready for its first survey.</h2>
+            <p>Start with a fresh survey and this workspace will begin filling with live metrics, recent activity, drafts, and response insights.</p>
+            <a href="{% url 'create_survey_page' %}" class="hero-link primary"><i data-lucide="plus"></i>Create Your First Survey</a>
+        </div>
+    {% endif %}
+</section>
 
 {% endblock content %}
