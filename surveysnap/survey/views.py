@@ -1,5 +1,7 @@
 import json
+import re
 from collections import Counter, defaultdict
+from datetime import datetime, timedelta
 from io import BytesIO
 from urllib.parse import urlencode
 
@@ -11,6 +13,7 @@ from django.db.models.functions import TruncMonth
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_POST
 
@@ -458,7 +461,62 @@ def _get_user_display_name(user):
 def _response_answer_items(response):
     if not isinstance(response.answers, dict):
         return []
-    return response.answers.get("answers", []) or []
+
+    answer_items = response.answers.get("answers", [])
+    if isinstance(answer_items, list) and answer_items:
+        normalized_items = []
+        for answer in answer_items:
+            if not isinstance(answer, dict):
+                continue
+            question_id = answer.get("question_id")
+            if isinstance(question_id, str) and question_id.isdigit():
+                question_id = int(question_id)
+            normalized_items.append(
+                {
+                    "question_id": question_id,
+                    "question_text": answer.get("question_text", ""),
+                    "question_type": answer.get("question_type", ""),
+                    "value": answer.get("value"),
+                }
+            )
+        return normalized_items
+
+    survey_questions = list(response.survey.questions.all())
+    if not survey_questions:
+        return []
+
+    questions_by_id = {str(question.id): question for question in survey_questions}
+    questions_by_text = {question.question_text.strip().lower(): question for question in survey_questions}
+    legacy_items = []
+
+    for key, raw_value in response.answers.items():
+        if key in {"answers", "submitted_via", "respondent"}:
+            continue
+
+        question = questions_by_id.get(str(key))
+        if question is None and isinstance(raw_value, dict):
+            raw_question_id = raw_value.get("question_id")
+            raw_question_text = (raw_value.get("question_text") or "").strip().lower()
+            if raw_question_id is not None:
+                question = questions_by_id.get(str(raw_question_id))
+            if question is None and raw_question_text:
+                question = questions_by_text.get(raw_question_text)
+        if question is None:
+            question = questions_by_text.get(str(key).strip().lower())
+        if question is None:
+            continue
+
+        normalized_value = raw_value.get("value") if isinstance(raw_value, dict) and "value" in raw_value else raw_value
+        legacy_items.append(
+            {
+                "question_id": question.id,
+                "question_text": question.question_text,
+                "question_type": question.question_type,
+                "value": normalized_value,
+            }
+        )
+
+    return legacy_items
 
 
 def _response_answer_lookup(response):
@@ -468,6 +526,14 @@ def _response_answer_lookup(response):
         if question_id is not None:
             answer_lookup[question_id] = answer
     return answer_lookup
+
+
+def _format_export_datetime(value):
+    if not value:
+        return "-"
+    if isinstance(value, datetime):
+        return timezone.localtime(value).strftime("%Y-%m-%d %I:%M %p")
+    return str(value)
 
 
 @transaction.atomic
@@ -610,9 +676,9 @@ def _survey_queryset():
     )
 
 
-# ===========================================================
+# ========================================================================================================
 # Admin
-# ===========================================================
+# ========================================================================================================
 
 @role_required(allowed_roles=["admin"])
 def AdminDashboardView(request):
@@ -746,9 +812,9 @@ def ReportsView(request):
     return render(request, "survey/admin/reports.html")
 
 
-# ===========================================================
+# ========================================================================================================
 # Survey Creator
-# ===========================================================
+# ========================================================================================================
 
 @role_required(allowed_roles=["creator"])
 def CreatorDashboardView(request):
@@ -1097,6 +1163,7 @@ def AnalyticsView(request):
         .order_by("-updated_at")
     )
 
+    now = timezone.localtime()
     survey_map = {survey.id: survey for survey in surveys}
     selected_survey = None
     selected_survey_id = request.GET.get("survey")
@@ -1104,6 +1171,44 @@ def AnalyticsView(request):
         selected_survey = survey_map.get(int(selected_survey_id))
     if selected_survey is None and surveys:
         selected_survey = surveys[0]
+
+    date_range = request.GET.get("range", "all")
+    custom_start_raw = (request.GET.get("start") or "").strip()
+    custom_end_raw = (request.GET.get("end") or "").strip()
+    selected_question_id = request.GET.get("question", "all")
+
+    range_options = {
+        "today": {"label": "Today", "days": 1},
+        "7d": {"label": "Last 7 days", "days": 7},
+        "30d": {"label": "Last 30 days", "days": 30},
+        "90d": {"label": "Last 90 days", "days": 90},
+        "all": {"label": "All time", "days": None},
+        "custom": {"label": "Custom range", "days": None},
+    }
+    if date_range not in range_options:
+        date_range = "all"
+
+    start_at = None
+    end_at = None
+    if date_range == "today":
+        start_at = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_at = now
+    elif range_options[date_range]["days"]:
+        start_at = now - timedelta(days=range_options[date_range]["days"] - 1)
+        end_at = now
+    elif date_range == "custom":
+        try:
+            if custom_start_raw:
+                start_at = timezone.make_aware(
+                    datetime.fromisoformat(custom_start_raw).replace(hour=0, minute=0, second=0, microsecond=0)
+                )
+            if custom_end_raw:
+                end_at = timezone.make_aware(
+                    datetime.fromisoformat(custom_end_raw).replace(hour=23, minute=59, second=59, microsecond=999999)
+                )
+        except ValueError:
+            start_at = None
+            end_at = None
 
     total_surveys = len(surveys)
     total_responses = sum(survey.response_count for survey in surveys)
@@ -1141,26 +1246,153 @@ def AnalyticsView(request):
 
     selected_questions = []
     selected_summary = None
-    selected_response_trend_labels = []
-    selected_response_trend_values = []
-    completion_rate = 0
+    filter_meta = {
+        "date_range": date_range,
+        "date_range_label": range_options[date_range]["label"],
+        "custom_start": custom_start_raw,
+        "custom_end": custom_end_raw,
+        "selected_question": selected_question_id,
+        "question_options": [],
+        "device_tracking_enabled": False,
+        "location_tracking_enabled": False,
+    }
+    selected_overview = None
+    audience_insights = []
+    engagement_metrics = []
+    export_actions = []
+    chart_data = {
+        "surveyLabels": [survey.title for survey in top_surveys],
+        "surveyResponses": [survey.response_count for survey in top_surveys],
+        "visibilityLabels": ["Public", "Private"],
+        "visibilityValues": [public_count, private_count],
+        "responseTrendLabels": [date.strftime("%d %b") for date, _ in sorted(response_trend_counter.items())][-8:],
+        "responseTrendValues": [value for _, value in sorted(response_trend_counter.items())][-8:],
+        "selectedTrendLines": {"daily": {"labels": [], "values": []}, "weekly": {"labels": [], "values": []}, "monthly": {"labels": [], "values": []}},
+        "selectedResponseBars": {"labels": [], "values": []},
+        "questionCharts": [],
+        "dropoffHeatmap": [],
+        "csvExport": {
+            "surveyTitle": "",
+            "exportDate": timezone.localtime().date().isoformat(),
+            "headers": [],
+            "rows": [],
+        },
+        "excelExport": {
+            "summary": {},
+            "trendRows": [],
+            "questionAnalysis": [],
+            "audienceInsights": [],
+        },
+        "pdfExport": {
+            "cover": {},
+            "keyMetrics": {},
+            "trend": {},
+            "audienceInsights": [],
+            "insightsSummary": {},
+        },
+    }
 
     if selected_survey:
-        selected_responses = list(selected_survey.responses.all())
+        all_selected_responses = list(selected_survey.responses.all())
+        selected_responses = []
+        for response in all_selected_responses:
+            submitted_at = timezone.localtime(response.submitted_at)
+            if start_at and submitted_at < start_at:
+                continue
+            if end_at and submitted_at > end_at:
+                continue
+            selected_responses.append(response)
+
         selected_questions_queryset = list(selected_survey.questions.all())
         selected_answer_maps = [_response_answer_lookup(response) for response in selected_responses]
+        filter_meta["question_options"] = [
+            {
+                "id": str(question.id),
+                "label": f"Q{index}. {question.question_text[:60]}",
+            }
+            for index, question in enumerate(selected_questions_queryset, start=1)
+        ]
+        csv_question_headers = [f"Q{index}" for index, _ in enumerate(selected_questions_queryset, start=1)]
+        chart_data["csvExport"] = {
+            "surveyTitle": selected_survey.title,
+            "exportDate": timezone.localtime().date().isoformat(),
+            "headers": ["Response ID", "User", "Start Time", "End Time", "Duration", "Status", *csv_question_headers],
+            "rows": [],
+        }
 
-        selected_trend_counter = defaultdict(int)
-        for response in selected_responses:
-            selected_trend_counter[response.submitted_at.date()] += 1
-        selected_response_trend_items = sorted(selected_trend_counter.items())
-        selected_response_trend_labels = [date.strftime("%d %b") for date, _ in selected_response_trend_items]
-        selected_response_trend_values = [value for _, value in selected_response_trend_items]
+        required_question_ids = {question.id for question in selected_questions_queryset if question.is_required}
+        for response, answer_map in zip(selected_responses, selected_answer_maps):
+            response_meta = response.answers if isinstance(response.answers, dict) else {}
+            started_at = (
+                response_meta.get("start_time")
+                or response_meta.get("started_at")
+                or response_meta.get("started_time")
+            )
+            completed_at = (
+                response_meta.get("end_time")
+                or response_meta.get("completed_at")
+                or response_meta.get("submitted_at")
+                or response.submitted_at
+            )
+            duration = response_meta.get("duration") or response_meta.get("duration_text") or "-"
+
+            answered_required_ids = {
+                question_id
+                for question_id, answer in answer_map.items()
+                if question_id in required_question_ids and answer.get("value") not in ("", [], {}, None)
+            }
+            response_status = "Completed" if answered_required_ids == required_question_ids else "Partial"
+
+            response_row = [
+                response.id,
+                _get_user_display_name(response.user) if response.user else f"Anonymous-{response.id}",
+                _format_export_datetime(started_at),
+                _format_export_datetime(completed_at),
+                duration,
+                response_meta.get("status") or response_status,
+            ]
+            for question in selected_questions_queryset:
+                answer = answer_map.get(question.id)
+                response_row.append(_format_answer_value(answer.get("value")) if answer else "-")
+
+            chart_data["csvExport"]["rows"].append(response_row)
 
         total_required_answers = sum(1 for question in selected_questions_queryset if question.is_required) * len(selected_responses)
         completed_required_answers = 0
+        selected_trend_daily = defaultdict(int)
+        selected_trend_weekly = defaultdict(int)
+        selected_trend_monthly = defaultdict(int)
+        response_hour_counter = Counter()
+        authenticated_responder_counter = Counter()
 
-        for question in selected_questions_queryset:
+        for response in selected_responses:
+            submitted_at = timezone.localtime(response.submitted_at)
+            selected_trend_daily[submitted_at.date()] += 1
+            week_start = submitted_at.date() - timedelta(days=submitted_at.weekday())
+            selected_trend_weekly[week_start] += 1
+            month_start = submitted_at.date().replace(day=1)
+            selected_trend_monthly[month_start] += 1
+            response_hour_counter[submitted_at.hour] += 1
+            if response.user_id:
+                authenticated_responder_counter[response.user_id] += 1
+
+        def _serialize_trend(counter, label_format):
+            items = sorted(counter.items())
+            return {
+                "labels": [label_format(item_key) for item_key, _ in items],
+                "values": [value for _, value in items],
+            }
+
+        chart_data["selectedTrendLines"] = {
+            "daily": _serialize_trend(selected_trend_daily, lambda value: value.strftime("%d %b")),
+            "weekly": _serialize_trend(selected_trend_weekly, lambda value: f"Week of {value.strftime('%d %b')}"),
+            "monthly": _serialize_trend(selected_trend_monthly, lambda value: value.strftime("%b %Y")),
+        }
+        chart_data["selectedResponseBars"] = _serialize_trend(selected_trend_daily, lambda value: value.strftime("%d %b"))
+
+        filtered_question_count = 0
+
+        for question_index, question in enumerate(selected_questions_queryset, start=1):
             option_labels = [option.option_text for option in question.options.all()]
             answer_values = []
             answer_total = 0
@@ -1179,16 +1411,22 @@ def AnalyticsView(request):
                 if question.is_required:
                     completed_required_answers += 1
 
+            drop_off_rate = round(100 - ((answer_total / len(selected_responses)) * 100), 1) if selected_responses else 0
             question_data = {
+                "id": question.id,
+                "question_number": question_index,
                 "question_text": question.question_text,
                 "question_type": question.get_question_type_display(),
                 "is_required": question.is_required,
                 "answer_total": answer_total,
                 "response_rate": round((answer_total / len(selected_responses)) * 100, 1) if selected_responses else 0,
+                "drop_off_rate": drop_off_rate,
                 "visual_type": "samples",
                 "segments": [],
                 "sample_answers": [],
                 "average_rating": None,
+                "top_option": None,
+                "text_cloud": [],
             }
 
             if question.question_type in {"multiple_choice", "dropdown"}:
@@ -1202,6 +1440,9 @@ def AnalyticsView(request):
                     }
                     for label in option_labels
                 ]
+                if counts:
+                    top_option = counts.most_common(1)[0]
+                    question_data["top_option"] = f"{top_option[0]} ({top_option[1]})"
             elif question.question_type == "checkboxes":
                 counts = Counter()
                 for value in answer_values:
@@ -1216,6 +1457,9 @@ def AnalyticsView(request):
                     }
                     for label in option_labels
                 ]
+                if counts:
+                    top_option = counts.most_common(1)[0]
+                    question_data["top_option"] = f"{top_option[0]} ({top_option[1]})"
             elif question.question_type == "rating":
                 rating_max = int((question.settings or {}).get("rating_max") or 5)
                 counts = Counter(int(value) for value in answer_values if isinstance(value, int))
@@ -1234,41 +1478,246 @@ def AnalyticsView(request):
                 ) if answer_total else None
             else:
                 formatted_samples = []
+                question_word_frequency = Counter()
                 for value in answer_values[:4]:
-                    formatted_samples.append(_format_answer_value(value))
+                    formatted_value = _format_answer_value(value)
+                    formatted_samples.append(formatted_value)
+                    for token in re.findall(r"[A-Za-z]{3,}", formatted_value.lower()):
+                        question_word_frequency[token] += 1
                 question_data["sample_answers"] = formatted_samples
+                question_data["text_cloud"] = [
+                    {"label": label, "count": count}
+                    for label, count in question_word_frequency.most_common(10)
+                ]
+
+            if selected_question_id not in {"", "all"} and str(question.id) != str(selected_question_id):
+                continue
+
+            filtered_question_count += 1
+            if question_data["visual_type"] == "distribution":
+                chart_data["questionCharts"].append(
+                    {
+                        "questionId": question.id,
+                        "questionType": question.question_type,
+                        "labels": [segment["label"] for segment in question_data["segments"]],
+                        "values": [segment["count"] for segment in question_data["segments"]],
+                    }
+                )
 
             selected_questions.append(question_data)
+            chart_data["dropoffHeatmap"].append(
+                {
+                    "questionNumber": question_index,
+                    "questionText": question.question_text,
+                    "dropoff": drop_off_rate,
+                    "responseRate": question_data["response_rate"],
+                }
+            )
 
         completion_rate = round(
             (completed_required_answers / total_required_answers) * 100,
             1,
         ) if total_required_answers else 100
+        drop_off_rate = round(100 - completion_rate, 1)
+
+        response_dates = sorted(timezone.localtime(response.submitted_at) for response in selected_responses)
+        first_response_date = response_dates[0] if response_dates else None
+        last_response_date = response_dates[-1] if response_dates else None
+        peak_hour = response_hour_counter.most_common(1)[0][0] if response_hour_counter else None
+        peak_response_time = (
+            datetime(2000, 1, 1, peak_hour, 0).strftime("%I:%M %p")
+            if peak_hour is not None
+            else "No responses yet"
+        )
+
+        returning_users = sum(1 for count in authenticated_responder_counter.values() if count > 1)
+        new_users = sum(1 for count in authenticated_responder_counter.values() if count == 1)
+        anonymous_users = len(selected_responses) - sum(authenticated_responder_counter.values())
 
         selected_summary = {
             "id": selected_survey.id,
             "title": selected_survey.title,
             "description": selected_survey.description,
+            "created_at": selected_survey.created_at,
             "is_published": selected_survey.is_published,
             "visibility": selected_survey.visibility,
             "survey_type": selected_survey.get_survey_type_display(),
             "question_count": selected_survey.question_count,
-            "response_count": selected_survey.response_count,
+            "response_count": len(selected_responses),
+            "total_response_count": selected_survey.response_count,
             "completion_rate": completion_rate,
+            "drop_off_rate": drop_off_rate,
             "updated_at": selected_survey.updated_at,
             "share_url": selected_survey.share_url,
+            "active_status": "Live" if selected_survey.is_published else "Closed",
+            "views_available": False,
+            "average_time_available": False,
+            "first_response_date": first_response_date,
+            "last_response_date": last_response_date,
+            "peak_response_time": peak_response_time,
+            "question_filter_count": filtered_question_count,
         }
 
-    chart_data = {
-        "surveyLabels": [survey.title for survey in top_surveys],
-        "surveyResponses": [survey.response_count for survey in top_surveys],
-        "visibilityLabels": ["Public", "Private"],
-        "visibilityValues": [public_count, private_count],
-        "responseTrendLabels": [date.strftime("%d %b") for date, _ in sorted(response_trend_counter.items())][-8:],
-        "responseTrendValues": [value for _, value in sorted(response_trend_counter.items())][-8:],
-        "selectedTrendLabels": selected_response_trend_labels[-8:],
-        "selectedTrendValues": selected_response_trend_values[-8:],
-    }
+        selected_overview = [
+            {"label": "First response", "value": first_response_date.strftime("%d %b %Y, %I:%M %p") if first_response_date else "No responses yet"},
+            {"label": "Last response", "value": last_response_date.strftime("%d %b %Y, %I:%M %p") if last_response_date else "No responses yet"},
+            {"label": "Peak response time", "value": peak_response_time},
+            {"label": "Questions in view", "value": str(filtered_question_count or len(selected_questions_queryset))},
+        ]
+
+        audience_insights = [
+            {"label": "Device type", "value": "Tracking not enabled", "description": "Capture device metadata during submission to unlock mobile vs desktop insight."},
+            {"label": "Browser", "value": "Tracking not enabled", "description": "Browser analytics can appear here once user-agent tracking is added."},
+            {"label": "Location", "value": "Tracking not enabled", "description": "City and country insight need IP or geo capture in the response pipeline."},
+            {"label": "New vs returning", "value": f"{new_users} new / {returning_users} returning", "description": f"{anonymous_users} anonymous response{'s' if anonymous_users != 1 else ''} are excluded from the returning-user check."},
+        ]
+
+        engagement_metrics = [
+            {"label": "Start rate", "value": "Unavailable", "description": "Survey views are not tracked in the current data model."},
+            {"label": "Completion rate", "value": f"{completion_rate}%", "description": "Calculated from required-question coverage across filtered responses."},
+            {"label": "Drop-off rate", "value": f"{drop_off_rate}%", "description": "Inverse of completion rate for the active response filter."},
+            {"label": "Highest drop-off", "value": f"Q{max(chart_data['dropoffHeatmap'], key=lambda item: item['dropoff'])['questionNumber']}" if chart_data["dropoffHeatmap"] else "N/A", "description": "Pinpoints the question where the biggest response loss appears."},
+        ]
+
+        export_actions = [
+            {"id": "exportCsv", "label": "Export CSV", "icon": "file-spreadsheet"},
+            {"id": "downloadCharts", "label": "Download Charts", "icon": "download"},
+            {"id": "printReport", "label": "Print Report", "icon": "printer"},
+        ]
+
+        peak_trend_label = "No response day yet"
+        peak_trend_value = 0
+        if chart_data["selectedResponseBars"]["labels"] and chart_data["selectedResponseBars"]["values"]:
+            peak_index = max(
+                range(len(chart_data["selectedResponseBars"]["values"])),
+                key=lambda index: chart_data["selectedResponseBars"]["values"][index],
+            )
+            peak_trend_label = chart_data["selectedResponseBars"]["labels"][peak_index]
+            peak_trend_value = chart_data["selectedResponseBars"]["values"][peak_index]
+
+        top_option_candidates = []
+        for question in selected_questions:
+            top_option = question.get("top_option")
+            if not top_option:
+                continue
+            try:
+                option_label, count_text = top_option.rsplit("(", 1)
+                option_count = int(count_text.rstrip(")"))
+            except (ValueError, AttributeError):
+                continue
+            top_option_candidates.append(
+                {
+                    "question_text": question["question_text"],
+                    "option_label": option_label.strip(),
+                    "count": option_count,
+                }
+            )
+
+        best_option = max(top_option_candidates, key=lambda item: item["count"]) if top_option_candidates else None
+        highest_dropoff = max(chart_data["dropoffHeatmap"], key=lambda item: item["dropoff"]) if chart_data["dropoffHeatmap"] else None
+        observations = [
+            f"{len(selected_responses)} response{'s' if len(selected_responses) != 1 else ''} are included in this report.",
+            f"Completion rate is {completion_rate}% for the active analytics view.",
+            (
+                f"Peak response day was {peak_trend_label} with {peak_trend_value} response{'s' if peak_trend_value != 1 else ''}."
+                if peak_trend_value
+                else "No peak response day is available yet."
+            ),
+        ]
+
+        chart_data["pdfExport"] = {
+            "cover": {
+                "surveyTitle": selected_survey.title,
+                "description": selected_survey.description or "No description added yet.",
+                "createdBy": _get_user_display_name(request.user),
+                "exportDate": timezone.localtime().strftime("%Y-%m-%d"),
+            },
+            "keyMetrics": {
+                "totalResponses": len(selected_responses),
+                "totalViews": "Unavailable",
+                "completionRate": f"{completion_rate}%",
+                "avgTime": "Unavailable",
+                "dropOffRate": f"{drop_off_rate}%",
+            },
+            "trend": {
+                "peakResponseDay": peak_trend_label,
+                "peakResponseCount": peak_trend_value,
+            },
+            "audienceInsights": [
+                {
+                    "label": item["label"],
+                    "value": item["value"],
+                    "description": item["description"],
+                }
+                for item in audience_insights
+            ],
+            "insightsSummary": {
+                "mostSelectedOption": (
+                    f"{best_option['option_label']} ({best_option['count']}) in {best_option['question_text']}"
+                    if best_option
+                    else "No option trend available yet"
+                ),
+                "dropOffQuestion": (
+                    f"Q{highest_dropoff['questionNumber']} - {highest_dropoff['questionText']}"
+                    if highest_dropoff
+                    else "No drop-off question yet"
+                ),
+                "observations": observations,
+            },
+        }
+
+        chart_data["excelExport"] = {
+            "summary": {
+                "surveyTitle": selected_survey.title,
+                "createdDate": timezone.localtime(selected_survey.created_at).strftime("%Y-%m-%d"),
+                "totalResponses": len(selected_responses),
+                "totalViews": "Unavailable",
+                "completionRate": f"{completion_rate}%",
+                "dropOffRate": f"{drop_off_rate}%",
+                "averageTime": "Unavailable",
+            },
+            "trendRows": [
+                {"date": label, "responses": value}
+                for label, value in zip(
+                    chart_data["selectedResponseBars"]["labels"],
+                    chart_data["selectedResponseBars"]["values"],
+                )
+            ],
+            "questionAnalysis": [
+                {
+                    "questionText": question["question_text"],
+                    "questionType": question["question_type"],
+                    "rows": (
+                        [
+                            {
+                                "label": segment["label"],
+                                "count": segment["count"],
+                                "percentage": f"{segment['width']}%",
+                            }
+                            for segment in question["segments"]
+                        ]
+                        if question["visual_type"] == "distribution"
+                        else [
+                            {
+                                "label": sample,
+                                "count": "",
+                                "percentage": "",
+                            }
+                            for sample in question["sample_answers"]
+                        ]
+                    ),
+                }
+                for question in selected_questions
+            ],
+            "audienceInsights": [
+                {
+                    "label": item["label"],
+                    "value": item["value"],
+                    "description": item["description"],
+                }
+                for item in audience_insights
+            ],
+        }
 
     context = {
         "surveys": surveys,
@@ -1283,13 +1732,18 @@ def AnalyticsView(request):
         "top_surveys": top_surveys,
         "recent_responses": recent_responses,
         "chart_data": chart_data,
+        "filter_meta": filter_meta,
+        "selected_overview": selected_overview,
+        "audience_insights": audience_insights,
+        "engagement_metrics": engagement_metrics,
+        "export_actions": export_actions,
     }
     return render(request, "survey/creator/analytics.html", context)
 
 
-# ===========================================================
+# ========================================================================================================
 # Respondent
-# ===========================================================
+# ========================================================================================================
 
 @role_required(allowed_roles=["respondent"])
 def RespondentDashboardView(request):

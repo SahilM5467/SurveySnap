@@ -1,6 +1,135 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="max-w-6xl mx-auto px-6 py-10">
+    <div class="rounded-[32px] bg-gradient-to-br from-slate-900 via-blue-800 to-blue-600 p-8 text-white shadow-lg">
+        <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+                <span class="inline-flex rounded-full bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
+                    Respondent Profile
+                </span>
+                <h1 class="mt-4 text-3xl font-semibold">
+                    {% if request.user.first_name or request.user.last_name %}
+                        {{ request.user.first_name }} {{ request.user.last_name }}
+                    {% else %}
+                        SurveySnap Respondent
+                    {% endif %}
+                </h1>
+                <p class="mt-3 max-w-2xl text-sm leading-7 text-white/80">
+                    Update your personal respondent details here. Your email address and account role stay protected and cannot be changed from this page.
+                </p>
+            </div>
 
-<h1> Profile </h1>
+            <div class="flex h-24 w-24 items-center justify-center rounded-3xl bg-white/15 text-3xl font-semibold text-white shadow-sm">
+                {% if request.user.first_name %}
+                    {{ request.user.first_name|slice:":1"|upper }}
+                {% else %}
+                    {{ request.user.email|slice:":1"|upper }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
+    <div class="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="mb-6">
+                <h2 class="text-2xl font-semibold text-slate-900">Edit Profile</h2>
+                <p class="mt-2 text-sm text-slate-600">You can update your personal information below.</p>
+            </div>
+
+            <form method="post" class="grid gap-5">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="{{ form.first_name.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700">First Name</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.last_name.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700">Last Name</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">Email Address</label>
+                        <input type="email" value="{{ request.user.email }}" disabled class="w-full cursor-not-allowed rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500 outline-none">
+                        <p class="mt-2 text-xs text-slate-500">Email address cannot be edited.</p>
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">Role</label>
+                        <input type="text" value="{{ request.user.role|title }}" disabled class="w-full cursor-not-allowed rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500 outline-none">
+                        <p class="mt-2 text-xs text-slate-500">Account role cannot be changed.</p>
+                    </div>
+
+                    <div>
+                        <label for="{{ form.gender.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700">Gender</label>
+                        {{ form.gender }}
+                        {% if form.gender.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.gender.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.phone_no.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700">Phone Number</label>
+                        {{ form.phone_no }}
+                        {% if form.phone_no.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.phone_no.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <div class="grid gap-6">
+            <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 class="text-xl font-semibold text-slate-900">Quick Access</h2>
+                <p class="mt-2 text-sm text-slate-600">Move between your respondent tools faster.</p>
+
+                <div class="mt-5 grid gap-3">
+                    <a href="{% url 'available_surveys' %}" class="inline-flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-800 transition hover:bg-blue-50 hover:text-blue-700">
+                        Available Surveys
+                        <span>&rarr;</span>
+                    </a>
+                    <a href="{% url 'my_responses' %}" class="inline-flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-800 transition hover:bg-blue-50 hover:text-blue-700">
+                        My Responses
+                        <span>&rarr;</span>
+                    </a>
+                    <a href="{% url 'respondent_dashboard' %}" class="inline-flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-800 transition hover:bg-blue-50 hover:text-blue-700">
+                        Dashboard
+                        <span>&rarr;</span>
+                    </a>
+                </div>
+            </section>
+
+            <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 class="text-xl font-semibold text-slate-900">Security Note</h2>
+                <p class="mt-3 text-sm leading-7 text-slate-600">
+                    Your login email and role are locked on this page to protect account identity and access control inside SurveySnap.
+                </p>
+                <div class="mt-5 rounded-2xl bg-blue-50 px-4 py-4 text-sm font-medium text-blue-800">
+                    You can safely update your name, gender, and phone number whenever needed.
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
 {% endblock content %}
