@@ -764,9 +764,35 @@ def AdminDashboardView(request):
 
 @role_required(allowed_roles=["admin"])
 def MangeUsersView(request):
-    search = request.GET.get("search")
-    users = User.objects.filter(email__icontains=search) if search else User.objects.all().order_by("-id")
-    return render(request, "survey/admin/manage_users.html", {"users": users})
+    search = (request.GET.get("search") or "").strip()
+    role = (request.GET.get("role") or "").strip().lower()
+
+    users = User.objects.all().order_by("-id")
+
+    if search:
+        users = users.filter(
+            Q(email__icontains=search)
+            | Q(first_name__icontains=search)
+            | Q(last_name__icontains=search)
+            | Q(phone_no__icontains=search)
+            | Q(role__icontains=search)
+        )
+
+    if role:
+        users = users.filter(role__iexact=role)
+
+    context = {
+        "users": users,
+        "filter_values": {
+            "search": search,
+            "role": role,
+        },
+        "user_stats": {
+            "total": User.objects.count(),
+            "listed": users.count(),
+        },
+    }
+    return render(request, "survey/admin/manage_users.html", context)
 
 
 @role_required(allowed_roles=["admin"])

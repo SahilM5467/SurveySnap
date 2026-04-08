@@ -14,36 +14,36 @@
 
 <!-- EMAIL -->
 <div class="input-group">
-    <i>📧</i>
-    <input type="email" name="email" required placeholder=" ">
+    <i class="fa-regular fa-envelope"></i>
+    <input type="email" name="email" required placeholder=" " autocomplete="email">
     <label>Email</label>
     <small class="error"></small>
 </div>
 
 <!-- FIRST NAME -->
 <div class="input-group">
-    <i>👤</i>
-    <input type="text" name="first_name" required placeholder=" ">
+    <i class="fa-regular fa-user"></i>
+    <input type="text" name="first_name" required placeholder=" " autocomplete="given-name">
     <label>First Name</label>
 </div>
 
 <!-- LAST NAME -->
 <div class="input-group">
-    <i>👤</i>
-    <input type="text" name="last_name" required placeholder=" ">
+    <i class="fa-regular fa-user"></i>
+    <input type="text" name="last_name" required placeholder=" " autocomplete="family-name">
     <label>Last Name</label>
 </div>
 
 <!-- PHONE -->
 <div class="input-group">
-    <i>📱</i>
-    <input type="text" name="phone_no" placeholder=" ">
+    <i class="fa-solid fa-phone"></i>
+    <input type="text" name="phone_no" placeholder=" " autocomplete="tel" inputmode="tel">
     <label>Phone</label>
 </div>
 
 <!-- GENDER -->
 <div class="input-group">
-    <i>⚧</i>
+    <i class="fa-solid fa-venus-mars"></i>
     <select name="gender">
         <option value="male">Male</option>
         <option value="female">Female</option>
@@ -54,7 +54,7 @@
 
 <!-- ROLE -->
 <div class="input-group">
-    <i>🎯</i>
+    <i class="fa-solid fa-user-shield"></i>
     <select name="role">
         <option value="admin">Admin</option>
         <option value="creator">Creator</option>
@@ -65,8 +65,8 @@
 
 <!-- PASSWORD -->
 <div class="input-group">
-    <i>🔒</i>
-    <input type="password" name="password" id="password" required placeholder=" ">
+    <i class="fa-solid fa-lock"></i>
+    <input type="password" name="password" id="password" required placeholder=" " autocomplete="new-password">
     <label>Password</label>
 
     <div class="strength-bar">
@@ -106,7 +106,7 @@ document.getElementById("password").addEventListener("input", function(){
 document.querySelector("input[name='email']").addEventListener("input", function(){
     let error = this.parentElement.querySelector(".error");
 
-    if(!this.value.includes("@")){
+    if(this.value && !this.checkValidity()){
         error.innerText = "Invalid email";
     } else {
         error.innerText = "";

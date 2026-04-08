@@ -5,130 +5,198 @@
 
 <link rel="stylesheet" href="{% static 'css/manage_users.css' %}">
 
-<div class="users-page">
-
-    <!-- HEADER -->
-    <div class="users-header">
-
+<section class="survey-admin-page manage-users-page fade-in">
+    <div class="page-head users-header">
         <div>
             <h1>Manage Users</h1>
         </div>
-
+        <div class="head-badge">
+            <i data-lucide="users"></i>
+            <span>{{ user_stats.listed }} shown</span>
+        </div>
     </div>
 
+    <section class="panel filter-panel">
+        <form method="GET" class="top-bar" id="userFilterForm">
+            <div class="search-container">
+                <label for="search" class="sr-only">Search users</label>
+                <input id="search" type="text" name="search" placeholder="Search name, email, phone, or role" value="{{ filter_values.search }}">
+            </div>
 
-    <!-- TOP BAR -->
-    <div class="top-bar">
+            <div class="filters">
+                <label for="role_filter" class="sr-only">Filter by role</label>
+                <select id="role_filter" name="role">
+                    <option value="">All Roles</option>
+                    <option value="admin" {% if filter_values.role == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="creator" {% if filter_values.role == 'creator' %}selected{% endif %}>Creator</option>
+                    <option value="respondent" {% if filter_values.role == 'respondent' %}selected{% endif %}>Respondent</option>
+                </select>
+            </div>
 
-        <form method="GET" class="search-container">
-            <input type="text" name="search" placeholder="Search by email..." />
+            <button type="submit" class="primary-btn btn-primary filter-submit">
+                <i data-lucide="search"></i>
+                <span>Apply</span>
+            </button>
+
+            <a href="{% url 'add_user' %}" class="primary-btn btn-primary">+ Add User</a>
         </form>
+    </section>
 
-        <div class="filters">
-            <select>
-                <option>All Roles</option>
-                <option>Admin</option>
-                <option>Creator</option>
-                <option>Respondent</option>
-            </select>
+    <article class="panel table-panel table-card">
+        <div class="table-title-row">
+            <h2>Users</h2>
+            <div class="table-summary">
+                <span><i data-lucide="filter"></i>{{ user_stats.listed }} matching records</span>
+            </div>
         </div>
 
-        <a href="{% url 'add_user' %}" class="btn-primary">
-            + Add User
-        </a>
+        <div class="table-wrap">
+            <table class="modern-table survey-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Contact</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th></th>
+                    </tr>
+                </thead>
 
-    </div>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="user-row"
+                        data-search="{{ user.first_name }} {{ user.last_name }} {{ user.email }} {{ user.phone_no|default:'' }} {{ user.role }}"
+                        data-role="{{ user.role|lower }}">
+                        <td class="user-cell">
+                            <div class="avatar owner-avatar">
+                                {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+                            </div>
 
+                            <div class="user-info">
+                                <span class="name">{{ user.first_name }} {{ user.last_name }}</span>
+                                <span class="email">{{ user.email }}</span>
+                            </div>
+                        </td>
 
-    <!-- TABLE CARD -->
-    <div class="table-card">
+                        <td>{{ user.phone_no|default:"-" }}</td>
 
-        <table class="modern-table">
-
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Contact</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th></th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% for user in users %}
-                <tr>
-
-                    <!-- USER INFO -->
-                    <td class="user-cell">
-
-                        <div class="avatar">
-                            {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
-                        </div>
-
-                        <div class="user-info">
-                            <span class="name">
-                                {{ user.first_name }} {{ user.last_name }}
+                        <td>
+                            <span class="badge chip role-{{ user.role }}">
+                                {{ user.role }}
                             </span>
-                            <span class="email">
-                                {{ user.email }}
-                            </span>
-                        </div>
+                        </td>
 
-                    </td>
+                        <td>
+                            {% if user.is_active %}
+                                <span class="status chip active">Active</span>
+                            {% else %}
+                                <span class="status chip inactive">Inactive</span>
+                            {% endif %}
+                        </td>
 
-                    <!-- CONTACT -->
-                    <td>
-                        {{ user.phone_no|default:"-" }}
-                    </td>
+                        <td>{{ user.created_at|date:"d M Y" }}</td>
 
-                    <!-- ROLE -->
-                    <td>
-                        <span class="badge role-{{ user.role }}">
-                            {{ user.role }}
-                        </span>
-                    </td>
+                        <td class="actions table-actions">
+                            <a href="{% url 'edit_user' user.id %}" class="icon-btn icon-action edit" aria-label="Edit user">
+                                <i data-lucide="square-pen"></i>
+                                <span class="action-label">Edit</span>
+                            </a>
 
-                    <!-- STATUS -->
-                    <td>
-                        {% if user.is_active %}
-                            <span class="status active">Active</span>
-                        {% else %}
-                            <span class="status inactive">Inactive</span>
-                        {% endif %}
-                    </td>
+                            <a href="{% url 'delete_user' user.id %}"
+                               class="icon-btn icon-action danger-action delete"
+                               onclick="return confirm('Delete User?')"
+                               aria-label="Delete user">
+                                <i data-lucide="trash-2"></i>
+                                <span class="action-label">Delete</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr id="serverEmptyState">
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i data-lucide="search-x"></i></div>
+                                <h3>No users found</h3>
+                                <p>Try a different keyword or clear the current filters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr id="clientEmptyState" hidden>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i data-lucide="search-x"></i></div>
+                                <h3>No users match this live filter</h3>
+                                <p>Adjust the keyword or role filter to see more results.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
 
-                    <!-- DATE -->
-                    <td>
-                        {{ user.created_at|date:"d M Y" }}
-                    </td>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("search");
+    const roleFilter = document.getElementById("role_filter");
+    const rows = Array.from(document.querySelectorAll(".user-row"));
+    const visibleUsersCount = document.getElementById("visibleUsersCount");
+    const activeKeyword = document.getElementById("activeKeyword");
+    const activeRole = document.getElementById("activeRole");
+    const clientEmptyState = document.getElementById("clientEmptyState");
+    const serverEmptyState = document.getElementById("serverEmptyState");
 
-                    <!-- ACTION -->
-                    <td class="actions">
+    function formatRole(value) {
+        if (!value) {
+            return "All Roles";
+        }
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    }
 
-                        <a href="{% url 'edit_user' user.id %}" class="icon-btn edit">
-                            ✏️
-                        </a>
+    function applyLiveFilters() {
+        const keyword = (searchInput?.value || "").trim().toLowerCase();
+        const role = (roleFilter?.value || "").trim().toLowerCase();
+        let visibleCount = 0;
 
-                        <a href="{% url 'delete_user' user.id %}"
-                           class="icon-btn delete"
-                           onclick="return confirm('Delete User?')">
-                           🗑️
-                        </a>
+        rows.forEach(function (row) {
+            const rowSearch = (row.dataset.search || "").toLowerCase();
+            const rowRole = (row.dataset.role || "").toLowerCase();
+            const matchesKeyword = !keyword || rowSearch.includes(keyword);
+            const matchesRole = !role || rowRole === role;
+            const shouldShow = matchesKeyword && matchesRole;
 
-                    </td>
+            row.hidden = !shouldShow;
+            if (shouldShow) {
+                visibleCount += 1;
+            }
+        });
 
-                </tr>
-                {% endfor %}
+        visibleUsersCount.textContent = String(visibleCount);
+        activeKeyword.textContent = keyword ? searchInput.value.trim() : "None";
+        activeRole.textContent = formatRole(role);
 
-            </tbody>
+        if (clientEmptyState) {
+            clientEmptyState.hidden = visibleCount !== 0 || rows.length === 0;
+        }
 
-        </table>
+        if (serverEmptyState) {
+            serverEmptyState.hidden = rows.length !== 0;
+        }
+    }
 
-    </div>
+    if (searchInput) {
+        searchInput.addEventListener("input", applyLiveFilters);
+    }
 
-</div>
+    if (roleFilter) {
+        roleFilter.addEventListener("change", applyLiveFilters);
+    }
+
+    applyLiveFilters();
+});
+</script>
 
 {% endblock content %}
