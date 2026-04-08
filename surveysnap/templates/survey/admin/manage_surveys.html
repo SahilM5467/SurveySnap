@@ -1,6 +1,341 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
 
-<h1> Manage Surveys </h1>
+<link rel="stylesheet" href="{% static 'css/manage_surveys.css' %}">
+
+<section class="survey-admin-page fade-in">
+    <div class="page-head">
+        <h1>Manage Surveys</h1>
+        <div class="head-badge">
+            <i data-lucide="database"></i>
+            <span>{{ stats.listed }} shown</span>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="message-stack">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}">
+                    <i data-lucide="{% if message.tags == 'success' %}badge-check{% else %}circle-alert{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="stats-grid">
+        <article class="stat-card">
+            <span>Total Surveys</span>
+            <strong>{{ stats.total }}</strong>
+            <small>Full catalog across all creators</small>
+        </article>
+        <article class="stat-card">
+            <span>Live</span>
+            <strong>{{ stats.live }}</strong>
+            <small>Published and visible surveys</small>
+        </article>
+        <article class="stat-card">
+            <span>Draft</span>
+            <strong>{{ stats.draft }}</strong>
+            <small>Still being prepared internally</small>
+        </article>
+        <article class="stat-card">
+            <span>Private</span>
+            <strong>{{ stats.private }}</strong>
+            <small>Restricted-access survey inventory</small>
+        </article>
+        <article class="stat-card">
+            <span>Expired</span>
+            <strong>{{ stats.expired }}</strong>
+            <small>Past the configured end date</small>
+        </article>
+    </section>
+
+    <section class="control-grid{% if edit_survey %} with-edit-panel{% endif %}">
+        <article class="panel filter-panel">
+            <form method="get" class="filters-form">
+                <div class="field">
+                    <label for="search" class="sr-only">Search</label>
+                    <input id="search" type="text" name="search" value="{{ filter_values.search }}" placeholder="Search title, owner, or category">
+                </div>
+
+                <div class="field">
+                    <label for="status" class="sr-only">Status</label>
+                    <select id="status" name="status">
+                        <option value="">All statuses</option>
+                        <option value="live" {% if filter_values.status == 'live' %}selected{% endif %}>Live</option>
+                        <option value="draft" {% if filter_values.status == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="scheduled" {% if filter_values.status == 'scheduled' %}selected{% endif %}>Scheduled expiry</option>
+                        <option value="expired" {% if filter_values.status == 'expired' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="visibility_filter" class="sr-only">Visibility</label>
+                    <select id="visibility_filter" name="visibility">
+                        <option value="">All visibility</option>
+                        <option value="public" {% if filter_values.visibility == 'public' %}selected{% endif %}>Public</option>
+                        <option value="private" {% if filter_values.visibility == 'private' %}selected{% endif %}>Private</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="type_filter" class="sr-only">Type</label>
+                    <select id="type_filter" name="type">
+                        <option value="">All types</option>
+                        <option value="regular" {% if filter_values.type == 'regular' %}selected{% endif %}>Regular</option>
+                        <option value="custom" {% if filter_values.type == 'custom' %}selected{% endif %}>Custom</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="creator_filter" class="sr-only">Owner</label>
+                    <select id="creator_filter" name="creator">
+                        <option value="">All creators</option>
+                        {% for creator in creators %}
+                            <option value="{{ creator.id }}" {% if filter_values.creator == creator.id|stringformat:'s' %}selected{% endif %}>
+                                {% if creator.first_name or creator.last_name %}{{ creator.first_name }} {{ creator.last_name }}{% else %}{{ creator.email }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="sort" class="sr-only">Sort by</label>
+                    <select id="sort" name="sort">
+                        <option value="updated" {% if filter_values.sort == 'updated' %}selected{% endif %}>Recently updated</option>
+                        <option value="created" {% if filter_values.sort == 'created' %}selected{% endif %}>Recently created</option>
+                        <option value="oldest" {% if filter_values.sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+                        <option value="title" {% if filter_values.sort == 'title' %}selected{% endif %}>Title A-Z</option>
+                        <option value="responses" {% if filter_values.sort == 'responses' %}selected{% endif %}>Most responses</option>
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="primary-btn">
+                        <i data-lucide="sliders-horizontal"></i>
+                        <span>Apply Filters</span>
+                    </button>
+                    <a href="{% url 'manage_surveys' %}" class="secondary-btn">Clear</a>
+                </div>
+            </form>
+
+            {% if categories %}
+                <div class="filter-tags">
+                    {% for category in categories %}
+                        <span>{{ category }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </article>
+
+        {% if edit_survey %}
+            <article class="panel form-panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Update Survey</h2>
+                        <p>Adjust survey metadata, owner assignment, and publishing state without leaving the module.</p>
+                    </div>
+                    <a href="{% url 'manage_surveys' %}" class="ghost-btn">Close</a>
+                </div>
+
+                <form method="post" class="survey-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="survey_id" value="{{ edit_survey.id }}">
+
+                    <div class="field-grid">
+                        <div class="field field-span-2">
+                            <label for="title">Survey Title</label>
+                            <input id="title" type="text" name="title" value="{{ edit_survey.title }}" placeholder="Employee Engagement Pulse">
+                        </div>
+
+                        <div class="field">
+                            <label for="created_by">Owner</label>
+                            <select id="created_by" name="created_by" required>
+                                <option value="">Select creator</option>
+                                {% for creator in creators %}
+                                    <option value="{{ creator.id }}" {% if edit_survey.created_by_id == creator.id %}selected{% endif %}>
+                                        {% if creator.first_name or creator.last_name %}{{ creator.first_name }} {{ creator.last_name }}{% else %}{{ creator.email }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="category">Category</label>
+                            <input id="category" type="text" name="category" value="{{ edit_survey.category }}" placeholder="Customer Experience">
+                        </div>
+
+                        <div class="field">
+                            <label for="survey_type">Type</label>
+                            <select id="survey_type" name="survey_type">
+                                <option value="regular" {% if edit_survey.survey_type == 'regular' %}selected{% endif %}>Regular</option>
+                                <option value="custom" {% if edit_survey.survey_type == 'custom' %}selected{% endif %}>Custom</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="visibility">Visibility</label>
+                            <select id="visibility" name="visibility">
+                                <option value="public" {% if edit_survey.visibility == 'public' %}selected{% endif %}>Public</option>
+                                <option value="private" {% if edit_survey.visibility == 'private' %}selected{% endif %}>Private</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="expiry_date">Expiry Date</label>
+                            <input id="expiry_date" type="datetime-local" name="expiry_date" value="{% if edit_survey.expiry_date %}{{ edit_survey.expiry_date|date:'Y-m-d\TH:i' }}{% endif %}">
+                        </div>
+
+                        <div class="field field-checkbox">
+                            <label for="is_published">Publish now</label>
+                            <div class="switch-wrap">
+                                <input id="is_published" type="checkbox" name="is_published" {% if edit_survey.is_published %}checked{% endif %}>
+                                <span>Keep this survey live after saving</span>
+                            </div>
+                        </div>
+
+                        <div class="field field-span-2">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" rows="4" placeholder="Add context for survey goals, audience, or internal notes.">{{ edit_survey.description }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="primary-btn">
+                            <i data-lucide="save"></i>
+                            <span>Update Survey</span>
+                        </button>
+                        <a href="{% url 'manage_surveys' %}" class="secondary-btn">Cancel</a>
+                    </div>
+                </form>
+            </article>
+        {% endif %}
+    </section>
+
+    <article class="panel table-panel">
+        <div class="table-title-row">
+            <h2>Surveys</h2>
+            <div class="table-summary">
+                <span><i data-lucide="clipboard-list"></i>{{ stats.listed }} records</span>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="survey-table">
+                <thead>
+                    <tr>
+                        <th>Survey ID</th>
+                        <th>Survey Title</th>
+                        <th>Category</th>
+                        <th>Owner</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Visibility</th>
+                        <th>Questions</th>
+                        <th>Responses</th>
+                        <th>Created</th>
+                        <th>Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for survey in surveys %}
+                        <tr>
+                            <td><span class="survey-id">#{{ survey.id }}</span></td>
+                            <td><strong class="survey-title-cell">{{ survey.title }}</strong></td>
+                            <td><span class="chip neutral">{{ survey.category|default:"Uncategorized" }}</span></td>
+                            <td>
+                                <div class="owner-cell">
+                                    <span class="owner-avatar">
+                                        {% if survey.created_by.first_name %}{{ survey.created_by.first_name|slice:":1" }}{% else %}{{ survey.created_by.email|slice:":1"|upper }}{% endif %}
+                                    </span>
+                                    <div>
+                                        <strong>
+                                            {% if survey.created_by.first_name or survey.created_by.last_name %}
+                                                {{ survey.created_by.first_name }} {{ survey.created_by.last_name }}
+                                            {% else %}
+                                                Creator
+                                            {% endif %}
+                                        </strong>
+                                        <span>{{ survey.created_by.email }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="chip neutral">{{ survey.get_survey_type_display }}</span>
+                            </td>
+                            <td>
+                                {% if survey.expiry_date and survey.expiry_date < now %}
+                                    <span class="chip danger">Expired</span>
+                                {% elif survey.is_published %}
+                                    <span class="chip success">Live</span>
+                                {% else %}
+                                    <span class="chip warning">Draft</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="chip {% if survey.visibility == 'private' %}neutral{% else %}info{% endif %}">
+                                    {{ survey.get_visibility_display }}
+                                </span>
+                            </td>
+                            <td>{{ survey.question_count }}</td>
+                            <td>{{ survey.response_count }}</td>
+                            <td>
+                                <div class="date-cell">
+                                    <strong>{{ survey.created_at|date:"d M Y" }}</strong>
+                                    <span>{{ survey.created_at|date:"h:i A" }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="date-cell">
+                                    <strong>{{ survey.updated_at|date:"d M Y" }}</strong>
+                                    <span>{{ survey.updated_at|date:"h:i A" }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="table-actions">
+                                    <a href="{% url 'manage_surveys' %}?edit={{ survey.id }}" class="icon-action" title="Edit">
+                                        <i data-lucide="square-pen"></i>
+                                    </a>
+
+                                    <form method="post" class="inline-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle_publish">
+                                        <input type="hidden" name="survey_id" value="{{ survey.id }}">
+                                        <button type="submit" class="icon-action" title="{% if survey.is_published %}Move to draft{% else %}Publish{% endif %}">
+                                            <i data-lucide="{% if survey.is_published %}pause-circle{% else %}rocket{% endif %}"></i>
+                                        </button>
+                                    </form>
+
+                                    <form method="post" class="inline-form" onsubmit="return confirm('Delete this survey permanently?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="survey_id" value="{{ survey.id }}">
+                                        <button type="submit" class="icon-action danger-action" title="Delete">
+                                            <i data-lucide="trash-2"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="12">
+                                <div class="empty-state">
+                                    <div class="empty-icon"><i data-lucide="folder-search-2"></i></div>
+                                    <h3>No surveys found</h3>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
 
 {% endblock content %}

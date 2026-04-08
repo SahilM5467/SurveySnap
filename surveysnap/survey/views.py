@@ -8,11 +8,12 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import transaction
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.db.models.functions import TruncMonth
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_POST
@@ -676,6 +677,24 @@ def _survey_queryset():
     )
 
 
+def _parse_admin_expiry_datetime(value):
+    raw_value = (value or "").strip()
+    if not raw_value:
+        return None
+
+    parsed = parse_datetime(raw_value)
+    if parsed is None:
+        try:
+            parsed = datetime.strptime(raw_value, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            raise ValueError("Enter a valid expiry date and time.")
+
+    if timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+
+    return parsed
+
+
 # ========================================================================================================
 # Admin
 # ========================================================================================================
@@ -799,7 +818,193 @@ def delete_user(request, id):
 
 @role_required(allowed_roles=["admin"])
 def MangeSurveysView(request):
-    return render(request, "survey/admin/manage_surveys.html")
+    creators = User.objects.filter(role="creator", is_active=True).order_by("first_name", "last_name", "email")
+    survey_base_queryset = (
+        Survey.objects.select_related("created_by", "template")
+        .annotate(
+            question_count=Count("questions", distinct=True),
+            response_count=Count("responses", distinct=True),
+        )
+        .order_by("-updated_at")
+    )
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        redirect_url = reverse("manage_surveys")
+
+        if action in {"create", "update"}:
+            title = (request.POST.get("title") or "").strip() or "Untitled Survey"
+            description = (request.POST.get("description") or "").strip()
+            category = (request.POST.get("category") or "").strip()
+            survey_type = request.POST.get("survey_type") or "regular"
+            visibility = request.POST.get("visibility") or "public"
+            creator_id = request.POST.get("created_by")
+            is_published = request.POST.get("is_published") == "on"
+
+            if survey_type not in {"regular", "custom"}:
+                messages.error(request, "Choose a valid survey type.")
+                return redirect(redirect_url)
+
+            if visibility not in {"public", "private"}:
+                messages.error(request, "Choose a valid visibility option.")
+                return redirect(redirect_url)
+
+            if not creator_id:
+                messages.error(request, "Select a survey owner.")
+                return redirect(redirect_url)
+
+            creator = get_object_or_404(User, pk=creator_id, role="creator")
+
+            try:
+                expiry_date = _parse_admin_expiry_datetime(request.POST.get("expiry_date"))
+            except ValueError as exc:
+                messages.error(request, str(exc))
+                if action == "update" and request.POST.get("survey_id"):
+                    return redirect(f"{redirect_url}?edit={request.POST.get('survey_id')}")
+                return redirect(redirect_url)
+
+            if expiry_date and expiry_date <= timezone.now():
+                messages.error(request, "Expiry date must be in the future.")
+                if action == "update" and request.POST.get("survey_id"):
+                    return redirect(f"{redirect_url}?edit={request.POST.get('survey_id')}")
+                return redirect(redirect_url)
+
+            if action == "create":
+                survey = Survey.objects.create(
+                    title=title,
+                    description=description,
+                    category=category,
+                    survey_type=survey_type,
+                    visibility=visibility,
+                    created_by=creator,
+                    is_published=is_published,
+                    expiry_date=expiry_date,
+                )
+                survey.share_url = _build_share_url(request, survey)
+                survey.save(update_fields=["share_url"])
+                messages.success(request, f'"{survey.title}" created successfully.')
+                return redirect(redirect_url)
+
+            survey = get_object_or_404(Survey, pk=request.POST.get("survey_id"))
+            survey.title = title
+            survey.description = description
+            survey.category = category
+            survey.survey_type = survey_type
+            survey.visibility = visibility
+            survey.created_by = creator
+            survey.is_published = is_published
+            survey.expiry_date = expiry_date
+            survey.share_url = _build_share_url(request, survey)
+            survey.save()
+            messages.success(request, f'"{survey.title}" updated successfully.')
+            return redirect(redirect_url)
+
+        if action == "delete":
+            survey = get_object_or_404(Survey, pk=request.POST.get("survey_id"))
+            survey_title = survey.title
+            survey.delete()
+            messages.success(request, f'"{survey_title}" deleted successfully.')
+            return redirect(redirect_url)
+
+        if action == "toggle_publish":
+            survey = get_object_or_404(Survey, pk=request.POST.get("survey_id"))
+            survey.is_published = not survey.is_published
+            survey.share_url = survey.share_url or _build_share_url(request, survey)
+            survey.save(update_fields=["is_published", "share_url", "updated_at"])
+            status_label = "published" if survey.is_published else "moved to draft"
+            messages.success(request, f'"{survey.title}" {status_label}.')
+            return redirect(redirect_url)
+
+        messages.error(request, "Unsupported survey action.")
+        return redirect(redirect_url)
+
+    search = (request.GET.get("search") or "").strip()
+    status_filter = (request.GET.get("status") or "").strip()
+    visibility_filter = (request.GET.get("visibility") or "").strip()
+    type_filter = (request.GET.get("type") or "").strip()
+    creator_filter = (request.GET.get("creator") or "").strip()
+    sort_filter = (request.GET.get("sort") or "updated").strip()
+
+    surveys = survey_base_queryset
+
+    if search:
+        surveys = surveys.filter(
+            Q(title__icontains=search)
+            | Q(description__icontains=search)
+            | Q(category__icontains=search)
+            | Q(created_by__email__icontains=search)
+            | Q(created_by__first_name__icontains=search)
+            | Q(created_by__last_name__icontains=search)
+        )
+
+    if status_filter == "live":
+        surveys = surveys.filter(is_published=True)
+    elif status_filter == "draft":
+        surveys = surveys.filter(is_published=False)
+    elif status_filter == "expired":
+        surveys = surveys.filter(expiry_date__lt=timezone.now())
+    elif status_filter == "scheduled":
+        surveys = surveys.filter(expiry_date__gte=timezone.now())
+
+    if visibility_filter in {"public", "private"}:
+        surveys = surveys.filter(visibility=visibility_filter)
+
+    if type_filter in {"regular", "custom"}:
+        surveys = surveys.filter(survey_type=type_filter)
+
+    if creator_filter.isdigit():
+        surveys = surveys.filter(created_by_id=creator_filter)
+
+    if sort_filter == "oldest":
+        surveys = surveys.order_by("created_at")
+    elif sort_filter == "title":
+        surveys = surveys.order_by("title")
+    elif sort_filter == "responses":
+        surveys = surveys.order_by("-response_count", "-updated_at")
+    elif sort_filter == "created":
+        surveys = surveys.order_by("-created_at")
+    else:
+        surveys = surveys.order_by("-updated_at")
+
+    edit_survey = None
+    edit_survey_id = request.GET.get("edit")
+    if edit_survey_id and edit_survey_id.isdigit():
+        edit_survey = survey_base_queryset.filter(pk=edit_survey_id).first()
+
+    now = timezone.now()
+    categories = (
+        Survey.objects.exclude(category="")
+        .values_list("category", flat=True)
+        .distinct()
+        .order_by("category")
+    )
+    all_surveys = survey_base_queryset
+    listed_survey_count = surveys.count()
+
+    context = {
+        "surveys": surveys,
+        "creators": creators,
+        "categories": categories,
+        "edit_survey": edit_survey,
+        "filter_values": {
+            "search": search,
+            "status": status_filter,
+            "visibility": visibility_filter,
+            "type": type_filter,
+            "creator": creator_filter,
+            "sort": sort_filter,
+        },
+        "stats": {
+            "total": all_surveys.count(),
+            "live": all_surveys.filter(is_published=True).count(),
+            "draft": all_surveys.filter(is_published=False).count(),
+            "private": all_surveys.filter(visibility="private").count(),
+            "expired": all_surveys.filter(expiry_date__lt=now).count(),
+            "listed": listed_survey_count,
+        },
+        "now": now,
+    }
+    return render(request, "survey/admin/manage_surveys.html", context)
 
 
 @role_required(allowed_roles=["admin"])
