@@ -1,4 +1,4 @@
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, UserCreationForm
 from .models import User
 from django import forms
 
@@ -30,6 +30,45 @@ class UserLoginForm(forms.Form):
         widget=forms.PasswordInput(attrs={
             "class": "block w-full pl-11 pr-12 h-14 border border-slate-200 bg-white rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none",
         })
+    )
+
+
+class ForgotPasswordForm(PasswordResetForm):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            "class": "block w-full pl-11 pr-4 h-14 border border-slate-200 bg-white rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none",
+            "placeholder": "Enter your registered email",
+            "autocomplete": "email",
+        })
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+
+        if not User.objects.filter(email__iexact=email, is_active=True).exists():
+            raise forms.ValidationError(
+                "We couldn't find an active SurveySnap account with that email address."
+            )
+
+        return email
+
+
+class ResetPasswordForm(SetPasswordForm):
+    new_password1 = forms.CharField(
+        label="New password",
+        widget=forms.PasswordInput(attrs={
+            "class": "block w-full pl-11 pr-4 h-14 border border-slate-200 bg-white rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none",
+            "placeholder": "Create a strong new password",
+            "autocomplete": "new-password",
+        }),
+    )
+    new_password2 = forms.CharField(
+        label="Confirm password",
+        widget=forms.PasswordInput(attrs={
+            "class": "block w-full pl-11 pr-4 h-14 border border-slate-200 bg-white rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none",
+            "placeholder": "Re-enter your new password",
+            "autocomplete": "new-password",
+        }),
     )
 
 

@@ -674,6 +674,11 @@ input:focus, select:focus, textarea:focus {
     color: var(--primary);
 }
 
+.btn-secondary:hover {
+    background: #d2ddff;
+    transition: var(--transition);
+}
+
 .hero-image img {
     width: 1000px;
     height: 500px;
@@ -969,7 +974,7 @@ input:focus, select:focus, textarea:focus {
 /* HERO */
 
 .about-hero{
-    padding:100px 10%;
+    padding:30px 10%;
     background:var(--primary-light);
 }
 
@@ -980,10 +985,11 @@ input:focus, select:focus, textarea:focus {
     gap:60px;
 }
 
-.about-hero-text h1{
-    font-size:48px;
+.about-hero h1{
+    font-size:40px;
+    font-weight: bold;
     color:var(--text-dark);
-    margin-bottom:20px;
+    text-align: center;
 }
 
 .about-hero-text p{
@@ -991,10 +997,12 @@ input:focus, select:focus, textarea:focus {
     font-size:18px;
     line-height:1.6;
     margin-bottom:30px;
+
 }
 
 .about-hero-image img{
-    width:1200px;
+    height:400px;
+    width:2000px;
 }
 
 .btn-primary{
@@ -1286,12 +1294,13 @@ input:focus, select:focus, textarea:focus {
 
 .contact-hero h1{
     font-size:42px;
+    font-weight: bold;
     color:var(--text-dark);
     margin-bottom:15px;
 }
 
 .contact-hero p{
-    color:var(--text-light);
+    color:var(--text-dark);
     font-size:18px;
     max-width:600px;
     margin:auto;

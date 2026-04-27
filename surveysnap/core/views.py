@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect
-from .forms import UserSignupForm, UserLoginForm
+from .forms import UserSignupForm, UserLoginForm, ForgotPasswordForm, ResetPasswordForm
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import views as auth_views
 from django.contrib import messages
 from django.http import HttpResponse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.urls import reverse_lazy
 
 def homeView(request):
     return render(request, "core/home.html", {
@@ -98,3 +100,26 @@ def userAutoLogoutView(request):
     if request.user.is_authenticated:
         logout(request)
     return HttpResponse(status=204)
+
+
+class ForgotPasswordView(auth_views.PasswordResetView):
+    form_class = ForgotPasswordForm
+    template_name = "core/password_reset.html"
+    email_template_name = "emails/password_reset_email.txt"
+    html_email_template_name = "emails/password_reset_email.html"
+    subject_template_name = "emails/password_reset_subject.txt"
+    success_url = reverse_lazy("password_reset_done")
+
+
+class ForgotPasswordDoneView(auth_views.PasswordResetDoneView):
+    template_name = "core/password_reset_done.html"
+
+
+class ResetPasswordConfirmView(auth_views.PasswordResetConfirmView):
+    form_class = ResetPasswordForm
+    template_name = "core/password_reset_confirm.html"
+    success_url = reverse_lazy("password_reset_complete")
+
+
+class ResetPasswordCompleteView(auth_views.PasswordResetCompleteView):
+    template_name = "core/password_reset_complete.html"

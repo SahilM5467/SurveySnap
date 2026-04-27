@@ -139,3 +139,5 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'surveysnap.survey@gmail.com'
 EMAIL_HOST_PASSWORD = 'lbsd ubfh tmyf zmfd' #app password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+PASSWORD_RESET_TIMEOUT = 3600
