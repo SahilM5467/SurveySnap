@@ -45,7 +45,7 @@
             </span>
         </a>
 
-        <div class="action-card action-card-templates">
+        <a class="action-card action-card-templates" href="#templates-section">
             <div class="action-card-inner">
                 <div class="action-icon">
                     <i class="bi bi-grid"></i>
@@ -56,7 +56,7 @@
                 <span>Explore below</span>
                 <i class="bi bi-arrow-down"></i>
             </span>
-        </div>
+        </a>
     </section>
 
     <section class="content-section">
@@ -106,7 +106,7 @@
         </div>
     </section>
 
-    <section class="content-section">
+    <section class="content-section" id="templates-section">
         <div class="section-heading">
             <div>
                 <span class="eyebrow">Inspiration Library</span>
@@ -118,20 +118,31 @@
         <div class="content-grid template-grid">
             {% for template in templates %}
                 <div class="content-card template-card">
-                    <div class="card-topline">
-                        <span class="badge subtle-badge">
-                            <i class="bi bi-grid-1x2"></i>
-                            <span>{{ template.get_template_type_display }}</span>
-                        </span>
-                        <span class="meta-text">{{ template.category|default:"General" }}</span>
+                    <div class="template-card-header">
+                        <div class="template-visual">
+                            <i class="bi bi-{{ template.icon|default:'grid-1x2' }}"></i>
+                        </div>
+                        <div class="template-copy">
+                            <div class="card-topline">
+                                <span class="badge subtle-badge">
+                                    <i class="bi bi-grid-1x2"></i>
+                                    <span>{{ template.template_type|title }}</span>
+                                </span>
+                                <span class="meta-text">{{ template.category|default:"General" }}</span>
+                            </div>
+                            <h3>{{ template.title }}</h3>
+                        </div>
                     </div>
-                    <h3>{{ template.title }}</h3>
                     <p>{{ template.description|default:"Reusable survey starter for a faster setup flow."|truncatechars:120 }}</p>
                     <div class="template-footer">
-                        <span class="footer-chip">
-                            <i class="bi bi-calendar3"></i>
-                            <span>Created {{ template.created_at|date:"M d, Y" }}</span>
-                        </span>
+                        <a class="template-action template-action-primary" href="{% url 'survey_builder' %}?template={{ template.slug }}" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-plus-circle-fill"></i>
+                            <span>Create</span>
+                        </a>
+                        <a class="template-action template-action-secondary" href="{% url 'template_preview' template.slug %}" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-eye-fill"></i>
+                            <span>Preview</span>
+                        </a>
                     </div>
                 </div>
             {% empty %}

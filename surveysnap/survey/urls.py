@@ -16,6 +16,11 @@ urlpatterns = [
     path("creator/create_survey", views.CreateSurveyPageView, name="create_survey_page"),
     path("creator/create_survey/builder/", views.SurveyBuilderView, name="survey_builder"),
     path(
+        "creator/create_survey/templates/<slug:template_slug>/preview/",
+        views.template_preview,
+        name="template_preview",
+    ),
+    path(
         "creator/create_survey/builder/<int:survey_id>/",
         views.SurveyBuilderView,
         name="survey_builder_edit",
@@ -35,6 +40,11 @@ urlpatterns = [
         "creator/create_survey/<int:survey_id>/unpublish/",
         views.unpublish_survey,
         name="unpublish_survey",
+    ),
+    path(
+        "creator/my_surveys/<int:survey_id>/delete/",
+        views.delete_creator_survey,
+        name="delete_creator_survey",
     ),
     path(
         "creator/create_survey/<int:survey_id>/preview/",

@@ -3,6 +3,7 @@ import re
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from io import BytesIO
+from types import SimpleNamespace
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -44,6 +45,129 @@ DEFAULT_SETTINGS = {
     "description": "",
     "private_password_configured": False,
 }
+SURVEY_TEMPLATE_LIBRARY = {
+    "customer-satisfaction-survey": {
+        "slug": "customer-satisfaction-survey",
+        "title": "Customer Satisfaction Survey",
+        "icon": "emoji-smile",
+        "description": "Measure overall satisfaction, loyalty, and service quality to understand how customers feel about your brand experience.",
+        "category": "Customer Experience",
+        "template_type": "regular",
+        "survey_title": "Customer Satisfaction Survey",
+        "survey_description": "Help us understand your experience so we can improve our products, service, and overall customer journey.",
+        "questions": [
+            {"question_text": "How satisfied are you with your overall experience?", "question_type": "rating", "is_required": True, "settings": {"rating_max": 5}},
+            {"question_text": "How likely are you to recommend us to others?", "question_type": "multiple_choice", "is_required": True, "options": ["Very likely", "Likely", "Neutral", "Unlikely", "Very unlikely"]},
+            {"question_text": "Which part of your experience stood out the most?", "question_type": "dropdown", "is_required": True, "options": ["Product quality", "Pricing", "Support", "Delivery", "Ease of use"]},
+            {"question_text": "What can we improve to serve you better?", "question_type": "paragraph", "is_required": False},
+        ],
+    },
+    "product-feedback-survey": {
+        "slug": "product-feedback-survey",
+        "title": "Product Feedback Survey",
+        "icon": "box-seam",
+        "description": "Collect direct product insight on usability, value, and feature gaps so your roadmap reflects real user priorities.",
+        "category": "Product Research",
+        "template_type": "regular",
+        "survey_title": "Product Feedback Survey",
+        "survey_description": "Share your feedback on the product experience, key strengths, and the improvements you want to see next.",
+        "questions": [
+            {"question_text": "How often do you use the product?", "question_type": "multiple_choice", "is_required": True, "options": ["Daily", "Weekly", "Monthly", "Occasionally"]},
+            {"question_text": "How easy is the product to use?", "question_type": "rating", "is_required": True, "settings": {"rating_max": 5}},
+            {"question_text": "Which features do you use the most?", "question_type": "checkboxes", "is_required": True, "options": ["Dashboard", "Reports", "Notifications", "Integrations", "Exports"]},
+            {"question_text": "What feature would you most like us to add next?", "question_type": "paragraph", "is_required": False},
+        ],
+    },
+    "employee-satisfaction-survey": {
+        "slug": "employee-satisfaction-survey",
+        "title": "Employee Satisfaction Survey",
+        "icon": "people",
+        "description": "Understand engagement, workplace culture, and team support levels to make smarter people and operations decisions.",
+        "category": "People & Culture",
+        "template_type": "regular",
+        "survey_title": "Employee Satisfaction Survey",
+        "survey_description": "We value your honest feedback on your experience, growth opportunities, and workplace environment.",
+        "questions": [
+            {"question_text": "How satisfied are you with your current role?", "question_type": "rating", "is_required": True, "settings": {"rating_max": 5}},
+            {"question_text": "Do you feel supported by your manager?", "question_type": "multiple_choice", "is_required": True, "options": ["Always", "Often", "Sometimes", "Rarely", "Never"]},
+            {"question_text": "Which areas most affect your workplace experience?", "question_type": "checkboxes", "is_required": False, "options": ["Work-life balance", "Compensation", "Team collaboration", "Recognition", "Career growth"]},
+            {"question_text": "What should we improve to make SurveySnap a better place to work?", "question_type": "paragraph", "is_required": False},
+        ],
+    },
+    "event-feedback-survey": {
+        "slug": "event-feedback-survey",
+        "title": "Event Feedback Survey",
+        "icon": "calendar-event",
+        "description": "Capture attendee sentiment on event organization, speakers, and overall value to improve future programs.",
+        "category": "Events",
+        "template_type": "regular",
+        "survey_title": "Event Feedback Survey",
+        "survey_description": "Tell us about your event experience so we can deliver even better sessions, networking, and logistics next time.",
+        "questions": [
+            {"question_text": "How would you rate the event overall?", "question_type": "rating", "is_required": True, "settings": {"rating_max": 5}},
+            {"question_text": "Which part of the event was most valuable?", "question_type": "dropdown", "is_required": True, "options": ["Keynote sessions", "Workshops", "Networking", "Venue experience", "Event organization"]},
+            {"question_text": "Would you attend a future event from us?", "question_type": "multiple_choice", "is_required": True, "options": ["Definitely", "Probably", "Maybe", "Unlikely"]},
+            {"question_text": "What suggestions do you have for future events?", "question_type": "paragraph", "is_required": False},
+        ],
+    },
+    "website-feedback-survey": {
+        "slug": "website-feedback-survey",
+        "title": "Website Feedback Survey",
+        "icon": "globe2",
+        "description": "Learn how visitors experience navigation, content clarity, and conversion flow across your website.",
+        "category": "Digital Experience",
+        "template_type": "regular",
+        "survey_title": "Website Feedback Survey",
+        "survey_description": "Help us improve our website by sharing your thoughts on usability, content, and overall browsing experience.",
+        "questions": [
+            {"question_text": "How easy was it to find what you were looking for?", "question_type": "rating", "is_required": True, "settings": {"rating_max": 5}},
+            {"question_text": "Which pages did you visit most?", "question_type": "checkboxes", "is_required": False, "options": ["Home", "Pricing", "Features", "Contact", "Support"]},
+            {"question_text": "How would you describe the website design?", "question_type": "multiple_choice", "is_required": True, "options": ["Excellent", "Good", "Average", "Needs improvement"]},
+            {"question_text": "What changes would improve your website experience?", "question_type": "paragraph", "is_required": False},
+        ],
+    },
+    "customer-support-feedback-survey": {
+        "slug": "customer-support-feedback-survey",
+        "title": "Customer Support Feedback Survey",
+        "icon": "headset",
+        "description": "Review support responsiveness, resolution quality, and team professionalism after customer interactions.",
+        "category": "Support Quality",
+        "template_type": "regular",
+        "survey_title": "Customer Support Feedback Survey",
+        "survey_description": "We’d love your feedback on our support experience so we can improve response quality and resolution speed.",
+        "questions": [
+            {"question_text": "How satisfied are you with the support you received?", "question_type": "rating", "is_required": True, "settings": {"rating_max": 5}},
+            {"question_text": "Was your issue resolved successfully?", "question_type": "multiple_choice", "is_required": True, "options": ["Yes, fully resolved", "Partially resolved", "No, not yet"]},
+            {"question_text": "Which support qualities stood out?", "question_type": "checkboxes", "is_required": False, "options": ["Speed", "Professionalism", "Clarity", "Friendliness", "Knowledge"]},
+            {"question_text": "What could our support team do better next time?", "question_type": "paragraph", "is_required": False},
+        ],
+    },
+}
+
+
+class _TemplateOptionSet(list):
+    def all(self):
+        return self
+
+
+class _TemplateQuestionPreview:
+    def __init__(self, question_data, index):
+        options = [
+            SimpleNamespace(option_text=option_text, order=option_index)
+            for option_index, option_text in enumerate(question_data.get("options", []), start=1)
+        ]
+        self.id = index
+        self.question_text = question_data["question_text"]
+        self.question_type = question_data["question_type"]
+        self.is_required = bool(question_data.get("is_required"))
+        self.order = index
+        self.settings = question_data.get("settings") or {}
+        self.options = _TemplateOptionSet(options)
+
+
+class _TemplateQuestionCollection(list):
+    def exists(self):
+        return bool(self)
 
 
 def _json_error(message, status=400):
@@ -55,6 +179,146 @@ def _parse_json_body(request):
         return json.loads(request.body.decode("utf-8") or "{}")
     except json.JSONDecodeError:
         return None
+
+
+def _template_library_cards():
+    return list(SURVEY_TEMPLATE_LIBRARY.values())
+
+
+def _get_template_definition(template_slug):
+    return SURVEY_TEMPLATE_LIBRARY.get(template_slug)
+
+
+def _template_structure_payload(template_definition):
+    return {
+        "survey_title": template_definition.get("survey_title") or template_definition["title"],
+        "survey_description": template_definition.get("survey_description") or template_definition["description"],
+        "questions": template_definition.get("questions", []),
+    }
+
+
+def _seed_template_library_records():
+    created_count = 0
+    updated_count = 0
+
+    for template_definition in _template_library_cards():
+        template, created = SurveyTemplate.objects.get_or_create(
+            title=template_definition["title"],
+            created_by=None,
+            defaults={
+                "description": template_definition["description"],
+                "template_type": template_definition.get("template_type", "regular"),
+                "category": template_definition.get("category", ""),
+                "structure": _template_structure_payload(template_definition),
+                "theme": DEFAULT_THEME,
+                "is_active": True,
+            },
+        )
+
+        if created:
+            created_count += 1
+            continue
+
+        changed = False
+        if template.description != template_definition["description"]:
+            template.description = template_definition["description"]
+            changed = True
+        if template.template_type != template_definition.get("template_type", "regular"):
+            template.template_type = template_definition.get("template_type", "regular")
+            changed = True
+        if template.category != template_definition.get("category", ""):
+            template.category = template_definition.get("category", "")
+            changed = True
+
+        structure_payload = _template_structure_payload(template_definition)
+        if template.structure != structure_payload:
+            template.structure = structure_payload
+            changed = True
+
+        if not template.theme:
+            template.theme = DEFAULT_THEME
+            changed = True
+
+        if changed:
+            template.save()
+            updated_count += 1
+
+    return created_count, updated_count
+
+
+def _serialize_template_questions(template_definition):
+    serialized_questions = []
+    for index, question in enumerate(template_definition.get("questions", []), start=1):
+        serialized_questions.append(
+            {
+                "id": None,
+                "client_id": f"template-{template_definition['slug']}-question-{index}",
+                "question_text": question["question_text"],
+                "question_type": question["question_type"],
+                "is_required": bool(question.get("is_required")),
+                "settings": question.get("settings") or {},
+                "options": [
+                    {
+                        "id": None,
+                        "option_text": option_text,
+                        "order": option_index,
+                    }
+                    for option_index, option_text in enumerate(question.get("options", []), start=1)
+                ],
+            }
+        )
+    return serialized_questions
+
+
+def _template_builder_bootstrap(template_definition, request):
+    questions = _serialize_template_questions(template_definition)
+    return {
+        "survey_id": None,
+        "title": template_definition.get("survey_title") or template_definition["title"],
+        "description": template_definition.get("survey_description") or template_definition["description"],
+        "mode": template_definition.get("template_type", "regular"),
+        "visibility": "public",
+        "theme": DEFAULT_THEME,
+        "settings": DEFAULT_SETTINGS,
+        "questions": questions,
+        "canvas_elements": [],
+        "is_published": False,
+        "share_url": "",
+        "preview_url": reverse("template_preview", kwargs={"template_slug": template_definition["slug"]}),
+        "publish_url": "",
+        "unpublish_url": "",
+        "save_url": "",
+        "qr_svg": "",
+        "template_slug": template_definition["slug"],
+        "template_name": template_definition["title"],
+        "builder_url": f"{reverse('survey_builder')}?template={template_definition['slug']}",
+    }
+
+
+def _build_template_preview_context(template_definition):
+    preview_questions = [
+        {
+            "question": _TemplateQuestionPreview(question, index),
+            "question_number": index,
+            "preview_answer": _build_preview_answer(_TemplateQuestionPreview(question, index), index - 1),
+        }
+        for index, question in enumerate(template_definition.get("questions", []), start=1)
+    ]
+    preview_survey = SimpleNamespace(
+        title=template_definition.get("survey_title") or template_definition["title"],
+        description=template_definition.get("survey_description") or template_definition["description"],
+        survey_type=template_definition.get("template_type", "regular"),
+        questions=_TemplateQuestionCollection([item["question"] for item in preview_questions]),
+    )
+    survey_payload = {
+        "theme": DEFAULT_THEME,
+    }
+    return {
+        "survey": preview_survey,
+        "survey_payload": survey_payload,
+        "preview_questions": preview_questions,
+        "preview_canvas_elements": [],
+    }
 
 
 def _normalize_question_type(question_type):
@@ -711,14 +975,6 @@ def AdminDashboardView(request):
     closed_surveys = Survey.objects.filter(expiry_date__isnull=False).count()
 
     templates = SurveyTemplate.objects.count()
-    system_templates = SurveyTemplate.objects.filter(created_by__isnull=True).count()
-    creator_templates = SurveyTemplate.objects.filter(created_by__isnull=False).count()
-
-    template_categories = (
-        SurveyTemplate.objects.values("category")
-        .annotate(total=Count("id"))
-        .order_by("-total")
-    )
 
     monthly_surveys = (
         Survey.objects.annotate(month=TruncMonth("created_at"))
@@ -733,12 +989,6 @@ def AdminDashboardView(request):
         .order_by("-total")[:5]
     )
 
-    top_template_creators = (
-        SurveyTemplate.objects.values("created_by__first_name", "created_by__last_name")
-        .annotate(total=Count("id"))
-        .order_by("-total")[:5]
-    )
-
     context = {
         "creators": creators,
         "respondents": respondents,
@@ -748,16 +998,11 @@ def AdminDashboardView(request):
         "active_surveys": active_surveys,
         "closed_surveys": closed_surveys,
         "templates": templates,
-        "system_templates": system_templates,
-        "creator_templates": creator_templates,
-        "categories": [item["category"] or "Uncategorized" for item in template_categories],
-        "category_counts": [item["total"] for item in template_categories],
         "months": [item["month"].strftime("%b") for item in monthly_surveys if item["month"]],
         "survey_counts": [item["total"] for item in monthly_surveys if item["month"]],
         "top_creators": top_creators,
-        "top_template_creators": top_template_creators,
         "recent_surveys": Survey.objects.select_related("created_by").order_by("-created_at")[:5],
-        "recent_templates": SurveyTemplate.objects.order_by("-created_at")[:5],
+        "template_records": SurveyTemplate.objects.select_related("created_by").order_by("-created_at"),
     }
     return render(request, "survey/admin/admin_dashboard.html", context)
 
@@ -1035,7 +1280,161 @@ def MangeSurveysView(request):
 
 @role_required(allowed_roles=["admin"])
 def ManageTemplatesView(request):
-    return render(request, "survey/admin/manage_templates.html")
+    creators = User.objects.filter(role="creator", is_active=True).order_by("first_name", "last_name", "email")
+    template_base_queryset = SurveyTemplate.objects.select_related("created_by").order_by("-created_at")
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        redirect_url = reverse("manage_templates")
+
+        if action == "seed_library":
+            created_count, updated_count = _seed_template_library_records()
+            messages.success(
+                request,
+                f"Starter templates synced successfully. Created: {created_count}, Updated: {updated_count}."
+            )
+            return redirect(redirect_url)
+
+        if action in {"create", "update"}:
+            title = (request.POST.get("title") or "").strip()
+            description = (request.POST.get("description") or "").strip()
+            category = (request.POST.get("category") or "").strip()
+            template_type = (request.POST.get("template_type") or "regular").strip()
+            owner_id = (request.POST.get("created_by") or "").strip()
+            is_active = request.POST.get("is_active") == "on"
+
+            if not title:
+                messages.error(request, "Template title is required.")
+                return redirect(redirect_url)
+
+            if template_type not in {"regular", "custom"}:
+                messages.error(request, "Choose a valid template type.")
+                return redirect(redirect_url)
+
+            owner = None
+            if owner_id:
+                if owner_id == "system":
+                    owner = None
+                else:
+                    owner = get_object_or_404(User, pk=owner_id, role="creator")
+
+            structure = {
+                "survey_title": title,
+                "survey_description": description,
+                "questions": [],
+            }
+
+            if action == "create":
+                SurveyTemplate.objects.create(
+                    title=title,
+                    description=description,
+                    category=category,
+                    template_type=template_type,
+                    created_by=owner,
+                    is_active=is_active,
+                    structure=structure,
+                    theme=DEFAULT_THEME,
+                )
+                messages.success(request, f'"{title}" template created successfully.')
+                return redirect(redirect_url)
+
+            template = get_object_or_404(SurveyTemplate, pk=request.POST.get("template_id"))
+            template.title = title
+            template.description = description
+            template.category = category
+            template.template_type = template_type
+            template.created_by = owner
+            template.is_active = is_active
+            if not template.structure:
+                template.structure = structure
+            if not template.theme:
+                template.theme = DEFAULT_THEME
+            template.save()
+            messages.success(request, f'"{template.title}" template updated successfully.')
+            return redirect(redirect_url)
+
+        if action == "delete":
+            template = get_object_or_404(SurveyTemplate, pk=request.POST.get("template_id"))
+            template_title = template.title
+            template.delete()
+            messages.success(request, f'"{template_title}" template deleted successfully.')
+            return redirect(redirect_url)
+
+        if action == "toggle_active":
+            template = get_object_or_404(SurveyTemplate, pk=request.POST.get("template_id"))
+            template.is_active = not template.is_active
+            template.save(update_fields=["is_active"])
+            state_label = "activated" if template.is_active else "deactivated"
+            messages.success(request, f'"{template.title}" template {state_label}.')
+            return redirect(redirect_url)
+
+        messages.error(request, "Unsupported template action.")
+        return redirect(redirect_url)
+
+    search = (request.GET.get("search") or "").strip()
+    status_filter = (request.GET.get("status") or "").strip()
+    type_filter = (request.GET.get("type") or "").strip()
+    owner_filter = (request.GET.get("owner") or "").strip()
+
+    templates = template_base_queryset
+
+    if search:
+        templates = templates.filter(
+            Q(title__icontains=search)
+            | Q(description__icontains=search)
+            | Q(category__icontains=search)
+            | Q(created_by__email__icontains=search)
+            | Q(created_by__first_name__icontains=search)
+            | Q(created_by__last_name__icontains=search)
+        )
+
+    if status_filter == "active":
+        templates = templates.filter(is_active=True)
+    elif status_filter == "inactive":
+        templates = templates.filter(is_active=False)
+
+    if type_filter in {"regular", "custom"}:
+        templates = templates.filter(template_type=type_filter)
+
+    if owner_filter == "system":
+        templates = templates.filter(created_by__isnull=True)
+    elif owner_filter.isdigit():
+        templates = templates.filter(created_by_id=owner_filter)
+
+    edit_template = None
+    edit_template_id = request.GET.get("edit")
+    if edit_template_id and edit_template_id.isdigit():
+        edit_template = template_base_queryset.filter(pk=edit_template_id).first()
+
+    categories = (
+        SurveyTemplate.objects.exclude(category="")
+        .values_list("category", flat=True)
+        .distinct()
+        .order_by("category")
+    )
+    all_templates = template_base_queryset
+
+    context = {
+        "templates": templates,
+        "creators": creators,
+        "categories": categories,
+        "edit_template": edit_template,
+        "filter_values": {
+            "search": search,
+            "status": status_filter,
+            "type": type_filter,
+            "owner": owner_filter,
+        },
+        "stats": {
+            "total": all_templates.count(),
+            "active": all_templates.filter(is_active=True).count(),
+            "inactive": all_templates.filter(is_active=False).count(),
+            "system": all_templates.filter(created_by__isnull=True).count(),
+            "creator_owned": all_templates.filter(created_by__isnull=False).count(),
+            "listed": templates.count(),
+        },
+    }
+    return render(request, "survey/admin/manage_templates.html", context)
 
 
 @role_required(allowed_roles=["admin"])
@@ -1103,14 +1502,13 @@ def CreateSurveyPageView(request):
         Survey.objects.filter(created_by=request.user, is_published=False)
         .order_by("-updated_at")
     )
-    templates = SurveyTemplate.objects.filter(is_active=True).order_by("-created_at")[:6]
     return render(
         request,
         "survey/creator/create_survey_page.html",
         {
             "drafts": drafts,
             "draft_count": drafts.count(),
-            "templates": templates,
+            "templates": _template_library_cards(),
         },
     )
 
@@ -1119,6 +1517,7 @@ def CreateSurveyPageView(request):
 @require_GET
 def SurveyBuilderView(request, survey_id=None):
     survey = None
+    template_slug = (request.GET.get("template") or "").strip()
     bootstrap = {
         "survey_id": None,
         "title": "Untitled Survey",
@@ -1141,6 +1540,10 @@ def SurveyBuilderView(request, survey_id=None):
     if survey_id is not None:
         survey = get_object_or_404(_survey_queryset(), pk=survey_id, created_by=request.user)
         bootstrap = _serialize_survey(request, survey)
+    elif template_slug:
+        template_definition = _get_template_definition(template_slug)
+        if template_definition is not None:
+            bootstrap = _template_builder_bootstrap(template_definition, request)
 
     return render(
         request,
@@ -1150,6 +1553,26 @@ def SurveyBuilderView(request, survey_id=None):
             "builder_bootstrap": bootstrap,
             "hide_navbar": True,
             "hide_footer": True,
+        },
+    )
+
+
+@role_required(allowed_roles=["creator"])
+@require_GET
+def template_preview(request, template_slug):
+    template_definition = _get_template_definition(template_slug)
+    if template_definition is None:
+        return redirect("create_survey_page")
+
+    preview_context = _build_template_preview_context(template_definition)
+    return render(
+        request,
+        "survey/creator/survey_preview.html",
+        {
+            "preview_mode": True,
+            "hide_navbar": True,
+            "hide_footer": True,
+            **preview_context,
         },
     )
 
@@ -1255,6 +1678,16 @@ def unpublish_survey(request, survey_id):
             "survey": serialized,
         }
     )
+
+
+@role_required(allowed_roles=["creator"])
+@require_POST
+def delete_creator_survey(request, survey_id):
+    survey = get_object_or_404(Survey, pk=survey_id, created_by=request.user)
+    survey_title = survey.title
+    survey.delete()
+    messages.success(request, f'"{survey_title}" deleted successfully.')
+    return redirect("my_surveys")
 
 
 @role_required(allowed_roles=["creator"])
@@ -1397,11 +1830,15 @@ def AnalyticsView(request):
     now = timezone.localtime()
     survey_map = {survey.id: survey for survey in surveys}
     selected_survey = None
-    selected_survey_id = request.GET.get("survey")
-    if selected_survey_id and selected_survey_id.isdigit():
+    selected_survey_id = (request.GET.get("survey") or "all").strip()
+    if selected_survey_id.isdigit():
         selected_survey = survey_map.get(int(selected_survey_id))
-    if selected_survey is None and surveys:
+    if selected_survey is None and selected_survey_id not in {"", "all"} and surveys:
         selected_survey = surveys[0]
+        selected_survey_id = str(selected_survey.id)
+
+    is_all_surveys_view = selected_survey is None and bool(surveys)
+    selected_survey_collection = surveys if is_all_surveys_view else ([selected_survey] if selected_survey else [])
 
     date_range = request.GET.get("range", "all")
     custom_start_raw = (request.GET.get("start") or "").strip()
@@ -1523,8 +1960,30 @@ def AnalyticsView(request):
         },
     }
 
-    if selected_survey:
-        all_selected_responses = list(selected_survey.responses.all())
+    if selected_survey_collection:
+        all_selected_responses = []
+        selected_questions_queryset = []
+        filter_meta["question_options"] = []
+        question_counter = 1
+
+        for survey_item in selected_survey_collection:
+            all_selected_responses.extend(list(survey_item.responses.all()))
+            survey_questions = list(survey_item.questions.all())
+            selected_questions_queryset.extend(survey_questions)
+
+            for survey_question_index, question in enumerate(survey_questions, start=1):
+                question_label = f"Q{question_counter}. {question.question_text[:60]}"
+                if is_all_surveys_view:
+                    question_label = f"{survey_item.title} • Q{survey_question_index}. {question.question_text[:60]}"
+
+                filter_meta["question_options"].append(
+                    {
+                        "id": str(question.id),
+                        "label": question_label,
+                    }
+                )
+                question_counter += 1
+
         selected_responses = []
         for response in all_selected_responses:
             submitted_at = timezone.localtime(response.submitted_at)
@@ -1534,18 +1993,10 @@ def AnalyticsView(request):
                 continue
             selected_responses.append(response)
 
-        selected_questions_queryset = list(selected_survey.questions.all())
         selected_answer_maps = [_response_answer_lookup(response) for response in selected_responses]
-        filter_meta["question_options"] = [
-            {
-                "id": str(question.id),
-                "label": f"Q{index}. {question.question_text[:60]}",
-            }
-            for index, question in enumerate(selected_questions_queryset, start=1)
-        ]
         csv_question_headers = [f"Q{index}" for index, _ in enumerate(selected_questions_queryset, start=1)]
         chart_data["csvExport"] = {
-            "surveyTitle": selected_survey.title,
+            "surveyTitle": "All Surveys" if is_all_surveys_view else selected_survey.title,
             "exportDate": timezone.localtime().date().isoformat(),
             "headers": ["Response ID", "User", "Start Time", "End Time", "Duration", "Status", *csv_question_headers],
             "rows": [],
@@ -1766,21 +2217,27 @@ def AnalyticsView(request):
         anonymous_users = len(selected_responses) - sum(authenticated_responder_counter.values())
 
         selected_summary = {
-            "id": selected_survey.id,
-            "title": selected_survey.title,
-            "description": selected_survey.description,
-            "created_at": selected_survey.created_at,
-            "is_published": selected_survey.is_published,
-            "visibility": selected_survey.visibility,
-            "survey_type": selected_survey.get_survey_type_display(),
-            "question_count": selected_survey.question_count,
+            "id": None if is_all_surveys_view else selected_survey.id,
+            "title": "All Surveys Overview" if is_all_surveys_view else selected_survey.title,
+            "description": (
+                "Combined analytics across all of your surveys, including both published and draft surveys."
+                if is_all_surveys_view
+                else selected_survey.description
+            ),
+            "created_at": min((survey.created_at for survey in selected_survey_collection), default=None) if is_all_surveys_view else selected_survey.created_at,
+            "is_published": None if is_all_surveys_view else selected_survey.is_published,
+            "visibility": "Mixed" if is_all_surveys_view else selected_survey.visibility,
+            "survey_type": "Mixed" if is_all_surveys_view else selected_survey.get_survey_type_display(),
+            "question_count": len(selected_questions_queryset) if is_all_surveys_view else selected_survey.question_count,
             "response_count": len(selected_responses),
-            "total_response_count": selected_survey.response_count,
+            "total_response_count": len(all_selected_responses) if is_all_surveys_view else selected_survey.response_count,
             "completion_rate": completion_rate,
             "drop_off_rate": drop_off_rate,
-            "updated_at": selected_survey.updated_at,
-            "share_url": selected_survey.share_url,
-            "active_status": "Live" if selected_survey.is_published else "Closed",
+            "updated_at": max((survey.updated_at for survey in selected_survey_collection), default=None) if is_all_surveys_view else selected_survey.updated_at,
+            "share_url": "" if is_all_surveys_view else selected_survey.share_url,
+            "active_status": "Published + Draft" if is_all_surveys_view else ("Live" if selected_survey.is_published else "Closed"),
+            "status_icon": "layers-3" if is_all_surveys_view else ("radio" if selected_survey.is_published else "circle-off"),
+            "status_class": "mixed" if is_all_surveys_view else ("live" if selected_survey.is_published else "closed"),
             "views_available": False,
             "average_time_available": False,
             "first_response_date": first_response_date,
@@ -1858,8 +2315,12 @@ def AnalyticsView(request):
 
         chart_data["pdfExport"] = {
             "cover": {
-                "surveyTitle": selected_survey.title,
-                "description": selected_survey.description or "No description added yet.",
+                "surveyTitle": "All Surveys Overview" if is_all_surveys_view else selected_survey.title,
+                "description": (
+                    "Combined analytics across all of your surveys, including published and draft surveys."
+                    if is_all_surveys_view
+                    else selected_survey.description or "No description added yet."
+                ),
                 "createdBy": _get_user_display_name(request.user),
                 "exportDate": timezone.localtime().strftime("%Y-%m-%d"),
             },
@@ -1899,8 +2360,12 @@ def AnalyticsView(request):
 
         chart_data["excelExport"] = {
             "summary": {
-                "surveyTitle": selected_survey.title,
-                "createdDate": timezone.localtime(selected_survey.created_at).strftime("%Y-%m-%d"),
+                "surveyTitle": "All Surveys Overview" if is_all_surveys_view else selected_survey.title,
+                "createdDate": (
+                    timezone.localtime(selected_summary["created_at"]).strftime("%Y-%m-%d")
+                    if selected_summary["created_at"]
+                    else "Unavailable"
+                ),
                 "totalResponses": len(selected_responses),
                 "totalViews": "Unavailable",
                 "completionRate": f"{completion_rate}%",
@@ -1953,6 +2418,7 @@ def AnalyticsView(request):
     context = {
         "surveys": surveys,
         "selected_survey": selected_summary,
+        "is_all_surveys_view": is_all_surveys_view,
         "selected_questions": selected_questions,
         "survey_count": total_surveys,
         "published_count": published_count,
@@ -1963,7 +2429,7 @@ def AnalyticsView(request):
         "top_surveys": top_surveys,
         "recent_responses": recent_responses,
         "chart_data": chart_data,
-        "filter_meta": filter_meta,
+        "filter_meta": filter_meta | {"selected_survey": selected_survey_id if not is_all_surveys_view else "all"},
         "selected_overview": selected_overview,
         "audience_insights": audience_insights,
         "engagement_metrics": engagement_metrics,

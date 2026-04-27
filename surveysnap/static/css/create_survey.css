@@ -4,6 +4,7 @@
     padding: 32px 32px 56px;
     color: var(--text-dark);
     font-family: "Poppins", sans-serif;
+    scroll-behavior: smooth;
 }
 
 .page-header {
@@ -203,6 +204,61 @@
     font-weight: 600;
 }
 
+.template-footer {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+.template-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1 1 150px;
+    min-height: 48px;
+    padding: 12px 18px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: #ffffff;
+    color: var(--text-dark);
+    font-size: 0.94rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.template-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.10);
+}
+
+.template-action-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    box-shadow: 0 16px 32px rgba(37, 99, 235, 0.18);
+}
+
+.template-action-primary:hover {
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 20px 36px rgba(37, 99, 235, 0.24);
+}
+
+.template-action-secondary {
+    border-color: rgba(148, 163, 184, 0.26);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    color: #0f172a;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.template-action-secondary:hover {
+    border-color: rgba(37, 99, 235, 0.28);
+    color: var(--primary-dark);
+}
+
 .action-link {
     width: fit-content;
     padding: 10px 14px;
@@ -262,6 +318,45 @@
 .template-card {
     background:
         linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.template-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #2563eb 0%, #60a5fa 50%, #22d3ee 100%);
+}
+
+.template-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.template-visual {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    min-width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #dbeafe 0%, #eff6ff 100%);
+    color: var(--primary-dark);
+    box-shadow:
+        inset 0 0 0 1px rgba(37, 99, 235, 0.14),
+        0 14px 30px rgba(37, 99, 235, 0.12);
+    font-size: 1.4rem;
+}
+
+.template-copy {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
 }
 
 .card-topline {
@@ -358,5 +453,15 @@
 
     .content-grid {
         grid-template-columns: 1fr;
+    }
+
+    .template-card-header {
+        flex-direction: column;
+    }
+
+    .template-visual {
+        width: 54px;
+        min-width: 54px;
+        height: 54px;
     }
 }

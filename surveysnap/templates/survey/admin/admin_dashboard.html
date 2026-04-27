@@ -2,7 +2,7 @@
 {% block content %}
 
 <style>
-.admin-dash{display:grid;gap:24px;padding:12px 0 40px}.hero,.card,.metric,.table-card,.activity-card,.empty{background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow-soft)}.hero{padding:36px;position:relative;overflow:hidden;background:radial-gradient(circle at top right,rgba(147,197,253,.34),transparent 22rem),linear-gradient(135deg,#0f172a 0%,#1e3a8a 56%,#2563eb 100%);color:#fff}.hero::after{content:"";position:absolute;right:-60px;bottom:-90px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.08)}.hero-grid,.metric-grid,.chart-grid,.table-grid,.mini-grid,.quick-grid{display:grid;gap:18px}.hero-grid{grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);align-items:end}.metric-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.chart-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.table-grid{grid-template-columns:1.1fr .9fr}.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:18px}.eyebrow,.hero-btn,.pill,.mini-pill,.table-tag{display:inline-flex;align-items:center;gap:8px}.eyebrow{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.12);font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase}.hero h1{margin:18px 0 12px;font-size:clamp(2rem,3vw,3.1rem);line-height:1.04;color:#fff}.hero p{max-width:760px;color:rgba(255,255,255,.84);line-height:1.8}.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.hero-btn{justify-content:center;padding:13px 18px;border-radius:16px;font-weight:600;transition:var(--transition)}.hero-btn.primary{background:#fff;color:var(--primary-dark)}.hero-btn.secondary{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.16)}.focus{padding:22px;border-radius:24px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(12px)}.focus h2{font-size:1rem;color:rgba(255,255,255,.92)}.mini{padding:14px;border-radius:18px;background:rgba(15,23,42,.18)}.mini span{display:block;color:rgba(255,255,255,.7);font-size:.82rem}.mini strong{display:block;margin-top:8px;font:600 1.45rem "Poppins",sans-serif;color:#fff}.card,.metric,.table-card,.activity-card,.empty{padding:24px}.metric{position:relative;overflow:hidden;min-height:180px;display:grid;gap:14px}.metric::after{content:"";position:absolute;right:-18px;top:-24px;width:92px;height:92px;border-radius:50%;background:rgba(37,99,235,.06)}.metric span{font-size:.84rem;color:var(--text-light)}.metric strong{display:block;margin-top:2px;font:600 1.9rem "Poppins",sans-serif;color:var(--text-dark)}.metric p,.section-head p,.table-card p,.activity-card p,.empty p{color:var(--text-light);line-height:1.7}.metric-top,.section-head,.table-head,.row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.pill,.mini-pill,.table-tag{padding:8px 12px;border-radius:999px;font-size:.8rem;font-weight:600}.pill{background:#eff6ff;color:var(--primary-dark)}.mini-pill{background:rgba(255,255,255,.12);color:#fff}.section-head{margin-bottom:18px}.chart-box{position:relative;min-height:300px}.card:hover,.metric:hover,.table-card:hover,.activity-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}.table-wrap{overflow:auto;border:1px solid rgba(37,99,235,.08);border-radius:18px}.admin-table{width:100%;border-collapse:collapse;background:#fff}.admin-table th,.admin-table td{padding:14px 16px;text-align:left}.admin-table thead{background:#eff6ff;color:var(--primary-dark)}.admin-table tbody tr:nth-child(even){background:#f8fbff}.admin-table tbody tr:hover{background:#eef4ff}.table-tag{background:#eff6ff;color:var(--primary-dark)}.list{display:grid;gap:12px}.list-item{padding:16px;border-radius:18px;background:#f8fbff;border:1px solid rgba(37,99,235,.08)}.list-item strong{display:block;font-size:.96rem}.list-item span{display:block;margin-top:4px;color:var(--text-light);font-size:.86rem}.empty{text-align:center;justify-items:center;display:grid;gap:14px;background:radial-gradient(circle at top,rgba(37,99,235,.12),transparent 20rem),linear-gradient(180deg,#fff 0%,#f8fbff 100%)}.empty-icon{width:72px;height:72px;border-radius:24px;display:inline-flex;align-items:center;justify-content:center;background:var(--primary-light);color:var(--primary-dark)}@media (max-width:1200px){.metric-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.chart-grid,.table-grid{grid-template-columns:1fr}}@media (max-width:900px){.hero-grid,.quick-grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:768px){.hero,.card,.metric,.table-card,.activity-card,.empty{padding:22px}.metric-grid,.chart-grid,.table-grid,.mini-grid,.quick-grid{grid-template-columns:1fr}.hero-btn{width:100%;justify-content:center}}
+.admin-dash{display:grid;gap:24px;padding:12px 0 40px}.hero,.card,.metric,.table-card,.activity-card,.empty{background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow-soft)}.hero{padding:36px;position:relative;overflow:hidden;background:radial-gradient(circle at top right,rgba(147,197,253,.34),transparent 22rem),linear-gradient(135deg,#0f172a 0%,#1e3a8a 56%,#2563eb 100%);color:#fff}.hero::after{content:"";position:absolute;right:-60px;bottom:-90px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.08)}.hero-grid,.metric-grid,.chart-grid,.table-grid,.mini-grid,.quick-grid{display:grid;gap:18px}.hero-grid{grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);align-items:end}.metric-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.chart-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.table-grid{grid-template-columns:1fr}.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:18px}.eyebrow,.hero-btn,.pill,.mini-pill,.table-tag{display:inline-flex;align-items:center;gap:8px}.eyebrow{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.12);font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase}.hero h1{margin:18px 0 12px;font-size:clamp(2rem,3vw,3.1rem);line-height:1.04;color:#fff}.hero p{max-width:760px;color:rgba(255,255,255,.84);line-height:1.8}.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.hero-btn{justify-content:center;padding:13px 18px;border-radius:16px;font-weight:600;transition:var(--transition)}.hero-btn.primary{background:#fff;color:var(--primary-dark)}.hero-btn.secondary{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.16)}.focus{padding:22px;border-radius:24px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(12px)}.focus h2{font-size:1rem;color:rgba(255,255,255,.92)}.mini{padding:14px;border-radius:18px;background:rgba(15,23,42,.18)}.mini span{display:block;color:rgba(255,255,255,.7);font-size:.82rem}.mini strong{display:block;margin-top:8px;font:600 1.45rem "Poppins",sans-serif;color:#fff}.card,.metric,.table-card,.activity-card,.empty{padding:24px}.metric{position:relative;overflow:hidden;min-height:180px;display:grid;gap:14px}.metric::after{content:"";position:absolute;right:-18px;top:-24px;width:92px;height:92px;border-radius:50%;background:rgba(37,99,235,.06)}.metric span{font-size:.84rem;color:var(--text-light)}.metric strong{display:block;margin-top:2px;font:600 1.9rem "Poppins",sans-serif;color:var(--text-dark)}.metric p,.section-head p,.table-card p,.activity-card p,.empty p,.template-bullets li{color:var(--text-light);line-height:1.7}.metric-top,.section-head,.table-head,.row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.pill,.mini-pill,.table-tag{padding:8px 12px;border-radius:999px;font-size:.8rem;font-weight:600}.pill{background:#eff6ff;color:var(--primary-dark)}.mini-pill{background:rgba(255,255,255,.12);color:#fff}.section-head{margin-bottom:18px}.chart-box{position:relative;min-height:300px}.card:hover,.metric:hover,.table-card:hover,.activity-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}.table-wrap{overflow:auto;border:1px solid rgba(37,99,235,.08);border-radius:18px}.admin-table{width:100%;border-collapse:collapse;background:#fff}.admin-table th,.admin-table td{padding:14px 16px;text-align:left}.admin-table thead{background:#eff6ff;color:var(--primary-dark)}.admin-table tbody tr:nth-child(even){background:#f8fbff}.admin-table tbody tr:hover{background:#eef4ff}.table-tag{background:#eff6ff;color:var(--primary-dark)}.list{display:grid;gap:12px}.list-item{padding:16px;border-radius:18px;background:#f8fbff;border:1px solid rgba(37,99,235,.08)}.list-item strong{display:block;font-size:.96rem}.list-item span{display:block;margin-top:4px;color:var(--text-light);font-size:.86rem}.template-bullets{margin:0;padding-left:22px;display:grid;gap:12px}.template-bullets li{font-size:.95rem}.table-card.full-span{grid-column:1/-1}.empty{text-align:center;justify-items:center;display:grid;gap:14px;background:radial-gradient(circle at top,rgba(37,99,235,.12),transparent 20rem),linear-gradient(180deg,#fff 0%,#f8fbff 100%)}.empty-icon{width:72px;height:72px;border-radius:24px;display:inline-flex;align-items:center;justify-content:center;background:var(--primary-light);color:var(--primary-dark)}@media (max-width:1200px){.metric-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.chart-grid,.table-grid{grid-template-columns:1fr}}@media (max-width:900px){.hero-grid,.quick-grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:768px){.hero,.card,.metric,.table-card,.activity-card,.empty{padding:22px}.metric-grid,.chart-grid,.table-grid,.mini-grid,.quick-grid{grid-template-columns:1fr}.hero-btn{width:100%;justify-content:center}}
 </style>
 
 <section class="admin-dash fade-in">
@@ -78,26 +78,6 @@
             </div>
             <div class="chart-box"><canvas id="growthChart"></canvas></div>
         </article>
-        <article class="card">
-            <div class="section-head">
-                <div>
-                    <h2>Template Ownership</h2>
-                    <p>Compare platform-provided templates against creator-generated templates.</p>
-                </div>
-                <span class="pill"><i data-lucide="layers-3"></i>Ownership split</span>
-            </div>
-            <div class="chart-box"><canvas id="templateChart"></canvas></div>
-        </article>
-        <article class="card">
-            <div class="section-head">
-                <div>
-                    <h2>Template Categories</h2>
-                    <p>Understand which template categories dominate your template library.</p>
-                </div>
-                <span class="pill"><i data-lucide="chart-column"></i>Category spread</span>
-            </div>
-            <div class="chart-box"><canvas id="categoryChart"></canvas></div>
-        </article>
     </section>
 
     <section class="quick-grid">
@@ -128,31 +108,24 @@
         <article class="activity-card">
             <div class="section-head">
                 <div>
-                    <h2>Recent Templates</h2>
-                    <p>Latest template additions to the library.</p>
+                    <h2>Templates</h2>
+                    <p>Core starter templates available in the SurveySnap template library.</p>
                 </div>
+                <span class="pill"><i data-lucide="layout-template"></i>Starter set</span>
             </div>
-            <div class="list">
-                {% for template in recent_templates %}
-                    <div class="list-item">
-                        <div class="row-top">
-                            <strong>{{ template.title }}</strong>
-                            <span class="table-tag">{{ template.category|default:"Uncategorized" }}</span>
-                        </div>
-                        <span>{{ template.created_at|date:"d M Y" }}</span>
-                    </div>
-                {% empty %}
-                    <div class="list-item">
-                        <strong>No templates yet</strong>
-                        <span>New templates will appear here as the library grows.</span>
-                    </div>
-                {% endfor %}
-            </div>
+            <ul class="template-bullets">
+                <li>Customer Satisfaction Survey</li>
+                <li>Product Feedback Survey</li>
+                <li>Employee Satisfaction Survey</li>
+                <li>Event Feedback Survey</li>
+                <li>Website Feedback Survey</li>
+                <li>Customer Support Feedback Survey</li>
+            </ul>
         </article>
     </section>
 
     <section class="table-grid">
-        <article class="table-card">
+        <article class="table-card full-span">
             <div class="table-head">
                 <div>
                     <h2>Top Survey Creators</h2>
@@ -177,37 +150,6 @@
                         {% empty %}
                             <tr>
                                 <td colspan="2">No creator activity available yet.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </article>
-        <article class="table-card">
-            <div class="table-head">
-                <div>
-                    <h2>Top Template Creators</h2>
-                    <p>Creators ranked by template contribution.</p>
-                </div>
-                <span class="pill"><i data-lucide="award"></i>Top 5</span>
-            </div>
-            <div class="table-wrap">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Creator</th>
-                            <th>Templates</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for creator in top_template_creators %}
-                            <tr>
-                                <td>{% if creator.created_by__first_name or creator.created_by__last_name %}{{ creator.created_by__first_name }} {{ creator.created_by__last_name }}{% else %}System / Unnamed{% endif %}</td>
-                                <td>{{ creator.total }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="2">No template creator activity available yet.</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -255,41 +197,6 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         options: {
             maintainAspectRatio: false,
-            scales: {
-                x: {grid: {display: false}},
-                y: {beginAtZero: true, ticks: {precision: 0}, grid: {color: "rgba(148,163,184,0.18)"}}
-            }
-        }
-    });
-
-    new Chart(document.getElementById("templateChart"), {
-        type: "pie",
-        data: {
-            labels: ["System Templates", "Creator Templates"],
-            datasets: [{
-                data: [{{ system_templates }}, {{ creator_templates }}],
-                backgroundColor: ["#2563EB", "#22C55E"],
-                borderWidth: 0
-            }]
-        },
-        options: {maintainAspectRatio: false}
-    });
-
-    new Chart(document.getElementById("categoryChart"), {
-        type: "bar",
-        data: {
-            labels: {{ categories|safe }},
-            datasets: [{
-                label: "Templates",
-                data: {{ category_counts|safe }},
-                backgroundColor: "rgba(37,99,235,0.82)",
-                borderRadius: 10,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            plugins: {legend: {display: false}},
             scales: {
                 x: {grid: {display: false}},
                 y: {beginAtZero: true, ticks: {precision: 0}, grid: {color: "rgba(148,163,184,0.18)"}}

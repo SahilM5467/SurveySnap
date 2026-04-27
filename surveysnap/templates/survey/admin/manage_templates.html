@@ -1,6 +1,355 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1> Manage Templates </h1>
+<style>
+.main-wrapper{max-width:100%;width:100%;padding:28px clamp(16px,2vw,32px) 40px}
+.template-admin-page{display:grid;gap:22px;padding-bottom:32px}
+.page-head,.panel,.stat-card,.alert{background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%);border:1px solid rgba(37,99,235,.1);border-radius:24px;box-shadow:var(--shadow-soft)}
+.page-head,.panel,.alert{padding:24px}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:18px;background:radial-gradient(circle at top right,rgba(37,99,235,.12),transparent 18rem),linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)}
+.page-head h1{font-size:clamp(2rem,2.6vw,2.8rem);color:var(--text-dark)}
+.panel-head p,.stat-card small,.owner-cell span,.date-cell span,.empty-state p{color:var(--text-light);line-height:1.7}
+.head-badge,.chip,.table-summary span,.filter-tags span{display:inline-flex;align-items:center;gap:8px;border-radius:999px;font-size:.82rem;font-weight:600}
+.head-badge{padding:10px 14px;background:#eff6ff;color:var(--primary-dark)}
+.message-stack{display:grid;gap:12px}
+.alert{display:flex;align-items:center;gap:12px;padding:16px 18px}
+.alert-success{border-color:rgba(34,197,94,.2);background:linear-gradient(180deg,#f7fff9 0%,#ffffff 100%);color:#166534}
+.alert-error,.alert-warning{border-color:rgba(245,158,11,.25);background:linear-gradient(180deg,#fffaf2 0%,#ffffff 100%);color:#92400e}
+.stats-grid,.control-grid{display:grid;gap:18px}
+.stats-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+.stat-card{padding:22px;position:relative;overflow:hidden}
+.stat-card::after{content:"";position:absolute;top:-34px;right:-16px;width:86px;height:86px;border-radius:50%;background:rgba(37,99,235,.07)}
+.stat-card span{font-size:.85rem;font-weight:700;color:var(--text-light);letter-spacing:.01em}
+.stat-card strong{display:block;margin:10px 0 6px;font:600 2rem "Poppins",sans-serif;color:var(--text-dark)}
+.control-grid{grid-template-columns:minmax(0,.95fr) minmax(420px,.85fr)}
+.panel-head,.table-head,.form-actions,.filter-actions,.table-actions,.owner-cell,.switch-wrap{display:flex;align-items:center;gap:12px}
+.panel-head,.table-head{justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.panel-head h2,.empty-state h3{color:var(--text-dark);font-size:1.15rem}
+.ghost-btn,.secondary-btn,.primary-btn,.danger-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border-radius:14px;font-weight:600;transition:var(--transition);cursor:pointer}
+.primary-btn,.secondary-btn,.ghost-btn,.danger-btn{padding:12px 16px}
+.primary-btn{border:none;background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff}
+.primary-btn:hover,.secondary-btn:hover,.ghost-btn:hover,.danger-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-hover)}
+.secondary-btn,.ghost-btn{border:1px solid rgba(37,99,235,.12);background:#fff;color:var(--text-dark)}
+.danger-btn{border:1px solid rgba(239,68,68,.16);background:#fff5f5;color:#b91c1c}
+.template-form,.filters-form{display:grid;gap:18px}
+.filters-form{grid-template-columns:repeat(7,minmax(0,1fr));align-items:center}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.field{display:grid;gap:8px}
+.field-span-2{grid-column:span 2}
+.field label{margin-bottom:0;font-size:.92rem;font-weight:600;color:var(--text-dark)}
+.field input,.field select,.field textarea{border-radius:16px;border-color:rgba(148,163,184,.32);background:#fff;padding:13px 14px}
+.field textarea{resize:vertical;min-height:110px}
+.field-checkbox{align-content:end}
+.switch-wrap{min-height:50px;border:1px solid rgba(148,163,184,.22);border-radius:16px;padding:12px 14px;background:#f8fbff}
+.switch-wrap input{width:18px;height:18px;flex:0 0 auto;margin:0}
+.switch-wrap span{font-size:.92rem;color:var(--text-light)}
+.filter-tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.filter-tags span,.table-summary span{padding:8px 12px;background:#eff6ff;color:var(--primary-dark)}
+.table-title-row{display:grid;gap:14px;justify-items:center;margin-bottom:20px}
+.table-title-row h2{font-size:1.4rem;font-weight:700;color:var(--text-dark);text-align:center}
+.table-wrap{overflow-x:auto;border-radius:20px;border:1px solid rgba(37,99,235,.08)}
+.template-table{width:100%;min-width:1240px;border-collapse:collapse;background:#fff}
+.template-table th,.template-table td{padding:16px 18px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(229,231,235,.92)}
+.template-table thead{background:#eff6ff}
+.template-table th{font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;color:var(--primary-dark)}
+.template-table tbody tr:hover{background:#f8fbff}
+.owner-cell strong,.template-title-cell,.date-cell strong{color:var(--text-dark)}
+.template-title-cell{display:inline-block;min-width:200px;font-weight:700}
+.owner-cell{align-items:center;min-width:200px}
+.owner-avatar{width:42px;height:42px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#dbeafe,#eff6ff);color:var(--primary-dark);font-weight:700;text-transform:uppercase;flex:0 0 auto}
+.owner-cell div,.date-cell{display:grid;gap:2px}
+.chip{padding:8px 12px}
+.chip.success{background:rgba(34,197,94,.12);color:#166534}
+.chip.warning{background:rgba(245,158,11,.14);color:#92400e}
+.chip.info{background:rgba(37,99,235,.12);color:var(--primary-dark)}
+.chip.neutral{background:rgba(15,23,42,.08);color:#334155}
+.table-actions{flex-wrap:wrap}
+.inline-form{margin:0}
+.icon-action{width:40px;height:40px;border-radius:14px;border:1px solid rgba(37,99,235,.12);background:#fff;color:var(--primary-dark);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--transition)}
+.icon-action:hover{transform:translateY(-1px);background:#eff6ff}
+.danger-action{color:#b91c1c;border-color:rgba(239,68,68,.16)}
+.danger-action:hover{background:#fef2f2}
+.empty-state{display:grid;gap:10px;justify-items:center;padding:44px 18px;text-align:center}
+.empty-icon{width:64px;height:64px;border-radius:20px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:var(--primary-dark)}
+@media (max-width:1200px){.stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.control-grid{grid-template-columns:1fr}.filters-form{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:768px){.main-wrapper{padding:20px 14px 28px}.page-head,.panel,.alert{padding:20px}.page-head,.panel-head,.table-head,.form-actions,.filter-actions{flex-direction:column;align-items:stretch}.stats-grid,.field-grid,.filters-form{grid-template-columns:1fr}.field-span-2{grid-column:span 1}.primary-btn,.secondary-btn,.ghost-btn,.danger-btn{width:100%}.template-table{min-width:1080px}}
+@media (max-width:576px){.template-admin-page{gap:18px}.stat-card strong{font-size:1.7rem}.template-table{min-width:980px}}
+</style>
+
+<section class="template-admin-page fade-in">
+    <section class="page-head">
+        <div>
+            <span class="head-badge"><i data-lucide="layout-template"></i>Template Admin</span>
+            <h1>Manage Survey Templates</h1>
+            <p>Create, seed, update, activate, and remove reusable survey templates from one admin workspace.</p>
+        </div>
+        <div class="form-actions">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="seed_library">
+                <button type="submit" class="primary-btn">
+                    <i data-lucide="database-zap"></i>Seed 6 Starter Templates
+                </button>
+            </form>
+            <a href="{% url 'admin_dashboard' %}" class="ghost-btn">
+                <i data-lucide="layout-dashboard"></i>Back to Dashboard
+            </a>
+        </div>
+    </section>
+
+    {% if messages %}
+        <div class="message-stack">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'success' }}">
+                    <i data-lucide="{% if message.tags == 'success' %}badge-check{% else %}circle-alert{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="stats-grid">
+        <article class="stat-card"><span>Total Templates</span><strong>{{ stats.total }}</strong><small>All templates stored in the database.</small></article>
+        <article class="stat-card"><span>Active</span><strong>{{ stats.active }}</strong><small>Templates currently available for use.</small></article>
+        <article class="stat-card"><span>Inactive</span><strong>{{ stats.inactive }}</strong><small>Templates disabled from active use.</small></article>
+        <article class="stat-card"><span>System Owned</span><strong>{{ stats.system }}</strong><small>Templates seeded or maintained by the platform.</small></article>
+        <article class="stat-card"><span>Creator Owned</span><strong>{{ stats.creator_owned }}</strong><small>Templates contributed by creators.</small></article>
+        <article class="stat-card"><span>Listed</span><strong>{{ stats.listed }}</strong><small>Templates visible under current filters.</small></article>
+    </section>
+
+    <section class="control-grid">
+        <article class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Filter Templates</h2>
+                    <p>Search and narrow the template library by status, type, and owner.</p>
+                </div>
+                <a href="{% url 'manage_templates' %}" class="secondary-btn"><i data-lucide="rotate-ccw"></i>Reset Filters</a>
+            </div>
+
+            <form method="get" class="filters-form">
+                <div class="field">
+                    <label for="search">Search</label>
+                    <input id="search" name="search" value="{{ filter_values.search }}" placeholder="Title, category, owner">
+                </div>
+                <div class="field">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="">All</option>
+                        <option value="active" {% if filter_values.status == "active" %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if filter_values.status == "inactive" %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="type">Type</label>
+                    <select id="type" name="type">
+                        <option value="">All</option>
+                        <option value="regular" {% if filter_values.type == "regular" %}selected{% endif %}>Regular</option>
+                        <option value="custom" {% if filter_values.type == "custom" %}selected{% endif %}>Custom</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="owner">Owner</label>
+                    <select id="owner" name="owner">
+                        <option value="">All</option>
+                        <option value="system" {% if filter_values.owner == "system" %}selected{% endif %}>System</option>
+                        {% for creator in creators %}
+                            <option value="{{ creator.id }}" {% if filter_values.owner == creator.id|stringformat:"s" %}selected{% endif %}>
+                                {% if creator.first_name or creator.last_name %}{{ creator.first_name }} {{ creator.last_name }}{% else %}{{ creator.email }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="primary-btn"><i data-lucide="filter"></i>Apply</button>
+                </div>
+            </form>
+
+            <div class="filter-tags">
+                <span><i data-lucide="layout-template"></i>{{ stats.listed }} listed</span>
+                <span><i data-lucide="badge-check"></i>{{ stats.active }} active</span>
+                <span><i data-lucide="database"></i>{{ stats.system }} system</span>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>{% if edit_template %}Edit Template{% else %}Create Template{% endif %}</h2>
+                    <p>{% if edit_template %}Update the selected template record in the database.{% else %}Add a new template record to the database.{% endif %}</p>
+                </div>
+                {% if edit_template %}
+                    <a href="{% url 'manage_templates' %}" class="secondary-btn"><i data-lucide="x"></i>Cancel Edit</a>
+                {% endif %}
+            </div>
+
+            <form method="post" class="template-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="{% if edit_template %}update{% else %}create{% endif %}">
+                {% if edit_template %}
+                    <input type="hidden" name="template_id" value="{{ edit_template.id }}">
+                {% endif %}
+
+                <div class="field-grid">
+                    <div class="field">
+                        <label for="title">Title</label>
+                        <input id="title" name="title" required value="{{ edit_template.title|default:'' }}" placeholder="Template title">
+                    </div>
+                    <div class="field">
+                        <label for="template_type">Type</label>
+                        <select id="template_type" name="template_type">
+                            <option value="regular" {% if edit_template and edit_template.template_type == "regular" %}selected{% endif %}>Regular</option>
+                            <option value="custom" {% if edit_template and edit_template.template_type == "custom" %}selected{% endif %}>Custom</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="category">Category</label>
+                        <input id="category" name="category" value="{{ edit_template.category|default:'' }}" list="template-category-list" placeholder="Template category">
+                        <datalist id="template-category-list">
+                            {% for category in categories %}
+                                <option value="{{ category }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="field">
+                        <label for="created_by">Owner</label>
+                        <select id="created_by" name="created_by">
+                            <option value="system" {% if not edit_template or not edit_template.created_by %}selected{% endif %}>System</option>
+                            {% for creator in creators %}
+                                <option value="{{ creator.id }}" {% if edit_template and edit_template.created_by_id == creator.id %}selected{% endif %}>
+                                    {% if creator.first_name or creator.last_name %}{{ creator.first_name }} {{ creator.last_name }}{% else %}{{ creator.email }}{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="field field-span-2">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" placeholder="Describe what this template is used for">{{ edit_template.description|default:'' }}</textarea>
+                    </div>
+                    <div class="field field-checkbox field-span-2">
+                        <label for="is_active">Availability</label>
+                        <label class="switch-wrap">
+                            <input id="is_active" type="checkbox" name="is_active" {% if not edit_template or edit_template.is_active %}checked{% endif %}>
+                            <span>Keep this template active and available in the library.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">
+                        <i data-lucide="{% if edit_template %}save{% else %}plus-circle{% endif %}"></i>
+                        {% if edit_template %}Update Template{% else %}Create Template{% endif %}
+                    </button>
+                </div>
+            </form>
+        </article>
+    </section>
+
+    <section class="panel">
+        <div class="table-title-row">
+            <h2>Templates Database</h2>
+            <div class="table-summary">
+                <span><i data-lucide="database"></i>{{ stats.total }} total records</span>
+                <span><i data-lucide="list"></i>{{ stats.listed }} in current view</span>
+            </div>
+        </div>
+
+        {% if templates %}
+            <div class="table-wrap">
+                <table class="template-table">
+                    <thead>
+                        <tr>
+                            <th>Template</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Owner</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for template in templates %}
+                            <tr>
+                                <td>
+                                    <span class="template-title-cell">{{ template.title }}</span>
+                                    <div class="date-cell">
+                                        <span>{{ template.description|default:"No description added."|truncatechars:90 }}</span>
+                                    </div>
+                                </td>
+                                <td><span class="chip info">{{ template.get_template_type_display }}</span></td>
+                                <td><span class="chip neutral">{{ template.category|default:"Uncategorized" }}</span></td>
+                                <td>
+                                    <span class="chip {% if template.is_active %}success{% else %}warning{% endif %}">
+                                        {% if template.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="owner-cell">
+                                        <span class="owner-avatar">
+                                            {% if template.created_by %}
+                                                {% if template.created_by.first_name %}{{ template.created_by.first_name|slice:":1" }}{% elif template.created_by.email %}{{ template.created_by.email|slice:":1" }}{% else %}C{% endif %}
+                                            {% else %}
+                                                S
+                                            {% endif %}
+                                        </span>
+                                        <div>
+                                            <strong>
+                                                {% if template.created_by %}
+                                                    {% if template.created_by.first_name or template.created_by.last_name %}
+                                                        {{ template.created_by.first_name }} {{ template.created_by.last_name }}
+                                                    {% else %}
+                                                        {{ template.created_by.email }}
+                                                    {% endif %}
+                                                {% else %}
+                                                    System
+                                                {% endif %}
+                                            </strong>
+                                            <span>{% if template.created_by %}Creator owned{% else %}Platform owned{% endif %}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="date-cell">
+                                    <strong>{{ template.created_at|date:"d M Y" }}</strong>
+                                    <span>{{ template.created_at|date:"h:i A" }}</span>
+                                </td>
+                                <td>
+                                    <div class="table-actions">
+                                        <a href="{% url 'manage_templates' %}?edit={{ template.id }}" class="icon-action" title="Edit template">
+                                            <i data-lucide="square-pen"></i>
+                                        </a>
+                                        <form method="post" class="inline-form">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="toggle_active">
+                                            <input type="hidden" name="template_id" value="{{ template.id }}">
+                                            <button type="submit" class="icon-action" title="{% if template.is_active %}Deactivate{% else %}Activate{% endif %} template">
+                                                <i data-lucide="{% if template.is_active %}toggle-right{% else %}toggle-left{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" class="inline-form" onsubmit="return confirm('Delete this template permanently?');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="template_id" value="{{ template.id }}">
+                                            <button type="submit" class="icon-action danger-action" title="Delete template">
+                                                <i data-lucide="trash-2"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i data-lucide="layout-template"></i></div>
+                <h3>No templates found</h3>
+                <p>Seed the starter library or create a new template to begin populating the database.</p>
+            </div>
+        {% endif %}
+    </section>
+</section>
 
 {% endblock content %}

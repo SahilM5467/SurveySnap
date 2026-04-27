@@ -26,6 +26,7 @@
 .pill{background:#eff6ff;color:var(--primary-dark)}
 .pill.live{background:rgba(34,197,94,.14);color:#15803d}
 .pill.closed{background:rgba(148,163,184,.16);color:#475569}
+.pill.mixed{background:rgba(37,99,235,.12);color:#1d4ed8}
 .field{display:grid;gap:8px}
 .field input,.field select{padding:12px 14px}
 .field.wide{grid-column:span 2}
@@ -102,8 +103,9 @@
                     <div class="field">
                         <label for="survey">Survey</label>
                         <select name="survey" id="survey">
+                            <option value="all" {% if filter_meta.selected_survey == "all" %}selected{% endif %}>All Surveys</option>
                             {% for survey in surveys %}
-                                <option value="{{ survey.id }}" {% if selected_survey and selected_survey.id == survey.id %}selected{% endif %}>{{ survey.title }}</option>
+                                <option value="{{ survey.id }}" {% if filter_meta.selected_survey == survey.id|stringformat:"s" %}selected{% endif %}>{{ survey.title }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -141,12 +143,13 @@
                     </div>
                     <div class="field">
                         <label>&nbsp;</label>
-                        <a href="{% url 'analytics' %}{% if selected_survey %}?survey={{ selected_survey.id }}{% endif %}" class="submit alt"><i data-lucide="rotate-ccw"></i>Reset</a>
+                        <a href="{% url 'analytics' %}{% if filter_meta.selected_survey and filter_meta.selected_survey != 'all' %}?survey={{ filter_meta.selected_survey }}{% endif %}" class="submit alt"><i data-lucide="rotate-ccw"></i>Reset</a>
                     </div>
                 </div>
                 <div class="chips">
                     <span class="pill"><i data-lucide="calendar-range"></i>{{ filter_meta.date_range_label }}</span>
                     {% if selected_survey %}<span class="pill"><i data-lucide="messages-square"></i>{{ selected_survey.response_count }} responses</span>{% endif %}
+                    {% if is_all_surveys_view %}<span class="pill mixed"><i data-lucide="layers-3"></i>Published + draft surveys</span>{% endif %}
                     {% if filter_meta.selected_question != "all" %}<span class="pill"><i data-lucide="filter"></i>Question filter active</span>{% endif %}
                 </div>
             </form>
@@ -157,11 +160,11 @@
                 <div class="survey-top">
                     <div>
                         <div class="survey-title">{{ selected_survey.title }}</div>
-                        <div class="survey-subtitle">Clean analytics overview for the selected survey.</div>
+                        <div class="survey-subtitle">{% if is_all_surveys_view %}Combined analytics across all your surveys, whether they are published or still drafts.{% else %}Clean analytics overview for the selected survey.{% endif %}</div>
                     </div>
                     <div class="survey-actions">
-                        <span class="pill {% if selected_survey.is_published %}live{% else %}closed{% endif %}">
-                            <i data-lucide="{% if selected_survey.is_published %}radio{% else %}circle-off{% endif %}"></i>
+                        <span class="pill {{ selected_survey.status_class|default:'closed' }}">
+                            <i data-lucide="{{ selected_survey.status_icon|default:'circle-off' }}"></i>
                             {{ selected_survey.active_status }}
                         </span>
                         <button type="button" class="action-btn primary" id="openExportModal">
